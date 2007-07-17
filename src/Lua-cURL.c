@@ -1,28 +1,32 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-int l_map (lua_State *L) {
+/* closures assigned to easy table */
+static const struct luaL_Reg luacurl_c[] = {
+  {"easy_dummy", l_easy_dummy},
+  {"easy_escape", l_easy_escape},
+  {"easy_unescape", l_easy_unescape},
+  {NULL, NULL}};
 
-  int i,n;
 
-  /* table */
-  luaL_checktype(L, 1, LUA_TTABLE);
-  /* table */
-  luaL_checktype(L, 2, LUA_TTABLE);
-  /* function */
-  luaL_checktype(L, 3, LUA_TFUNCTION);
-  
-  for (i = 1, n = lua_objlen(L, 1); i <= n; i++) {
-    printf("Fasel\n");
-    lua_pushvalue(L, 3);	/* push function */
-    lua_rawgeti(L, 1, i);	/* push table element at index */
-    lua_call(L, 1, 1);
-    lua_rawseti(L, 2, i);
-  }
-     
-}
+/* functions in module namespace*/
+static const struct luaL_Reg luacurl_f[] = {
+  {"easy_init", l_easy_init},
+  {"unescape", l_unescape},
+  {"version", l_version},
+  {"version_info", l_version_info},
+  {NULL, NULL}};
 
-static int l_easy_escape(lua_State *L) {
+/* functions assigned to metatable */
+static const struct luaL_Reg luacurl_m[] = {
+  {"__tostring", l_tostring},
+  {"__gc", l_easy_gc},
+  {"__newindex", l_setopt},
+  {"__index", l_getopt},
+  {NULL, NULL}};
+
+
+int l_easy_escape(lua_State *L) {
   int length = 0;
   CURL *curl = LUACURL_UPVALUE(L);
   const char *url = luaL_checklstring(L, 1, &length);
@@ -32,14 +36,8 @@ static int l_easy_escape(lua_State *L) {
   return 1;
 }
 
-/* closures assigned to easy table */
-static const struct luaL_Reg luacurl_c[] = {
-  {"easy_dummy", l_easy_dummy},
-  {"easy_escape", l_easy_escape},
-  {"easy_unescape", l_easy_unescape},
-  {NULL, NULL}};
 
-static int l_easy_init(lua_State *L) {
+int l_easy_init(lua_State *L) {
   CURL *curl = curl_easy_init( );
   if (curl == NULL) 
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
@@ -73,7 +71,7 @@ int l_tostring (lua_State *L) {
 }
 
 /* deprecated */
-static int l_unescape(lua_State *L) {
+int l_unescape(lua_State *L) {
   int length;
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_unescape(url, length);
@@ -83,12 +81,12 @@ static int l_unescape(lua_State *L) {
 }
 
 
-static int l_version(lua_State *L) {
+int l_version(lua_State *L) {
   lua_pushstring(L, curl_version());
   return 1;
 }
 
-static int l_version_info (lua_State *L) {
+int l_version_info (lua_State *L) {
   int i;
   curl_version_info_data *d = curl_version_info(CURLVERSION_NOW);	
 
@@ -218,46 +216,30 @@ static int l_version_info (lua_State *L) {
 
 /* just test if called with easy hander */ 
 int l_easy_dummy(lua_State *L) {
-  LUACURL_CHECKEASY(L);
-  printf("Hello from easy Dummy\n");
-  return 0;
+  CURL *curl = LUACURL_UPVALUE(L);
+  lua_pushfstring(L, "cURL (%p)", curl);
+  return 1;
 }
 
-static int l_easy_gc(lua_State *L) {
+int l_easy_gc(lua_State *L) {
   CURL *curl = LUACURL_CHECKEASY(L);
   curl_easy_cleanup(curl);
   printf("Handle %x gone\n", curl);
   return 0;
 }
-static int l_setopt(lua_State *L) {
+int l_setopt(lua_State *L) {
   CURL *curl = LUACURL_CHECKEASY(L);
   const char *url = luaL_checkstring(L, 2);
   printf("Trying to set %s\n", url);
   return 0;
 }
 
-static int l_getopt(lua_State *L) {
+int l_getopt(lua_State *L) {
   CURL *curl = LUACURL_CHECKEASY(L);
   const char *url = luaL_checkstring(L, 2);
   printf("Trying to get %s\n", url);
   return 0;
 }
-
-/* functions in module namespace*/
-static const struct luaL_Reg luacurl_f[] = {
-  {"easy_init", l_easy_init},
-  {"unescape", l_unescape},
-  {"version", l_version},
-  {"version_info", l_version_info},
-  {NULL, NULL}};
-
-/* functions assigned to metatable */
-static const struct luaL_Reg luacurl_m[] = {
-  {"__tostring", l_tostring},
-  {"__gc", l_easy_gc},
-  {"__newindex", l_setopt},
-  {"__index", l_getopt},
-  {NULL, NULL}};
 
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
