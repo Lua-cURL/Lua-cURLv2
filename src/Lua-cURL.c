@@ -8,6 +8,12 @@ static const struct luaL_Reg luacurl_c[] = {
   {"easy_unescape", l_easy_unescape},
   {NULL, NULL}};
 
+/* closures assigned to setopt in easy table */
+static struct luaL_Reg_Setopt luacurl_opt_c[] = {
+  {"verbose", CURLOPT_VERBOSE, l_easy_dummy},
+  {"header", CURLOPT_HEADER, l_easy_dummy},
+  /* dummy opt value */
+  {NULL, CURLOPT_VERBOSE, NULL}};	
 
 /* functions in module namespace*/
 static const struct luaL_Reg luacurl_f[] = {
@@ -28,7 +34,7 @@ static const struct luaL_Reg luacurl_m[] = {
 
 int l_easy_escape(lua_State *L) {
   int length = 0;
-  CURL *curl = LUACURL_UPVALUE(L);
+  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_easy_escape(curl, url, length);
   lua_pushstring(L, rurl);
@@ -38,6 +44,7 @@ int l_easy_escape(lua_State *L) {
 
 
 int l_easy_init(lua_State *L) {
+  luaL_Reg_Setopt *setopts;
   CURL *curl = curl_easy_init( );
   if (curl == NULL) 
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
@@ -48,6 +55,20 @@ int l_easy_init(lua_State *L) {
   lua_pushlightuserdata(L, curl); 
   luaI_openlib (L, NULL, luacurl_c, 1);
 
+  
+  for (setopts = luacurl_opt_c; setopts->name; setopts++) {
+    CURLoption *optionp = &(setopts->option);
+    stackDump(L);
+    lua_pushlightuserdata(L, curl); 
+    lua_pushlightuserdata(L, optionp);
+    printf("Position of Ligthuserdata: %p\n", optionp);
+    printf("Position of Ligthuserdata: %p\n", curl);
+    stackDump(L);
+    lua_pushcclosure(L, setopts->func, 2);
+    stackDump(L);
+    lua_setfield(L, -2, setopts->name);
+    stackDump(L);
+  }
   /* return table */
   return 1;			
 }
@@ -56,7 +77,7 @@ int l_easy_init(lua_State *L) {
 int l_easy_unescape(lua_State *L) {
   int inlength = 0;
   int outlength;
-  CURL *curl = LUACURL_UPVALUE(L);
+  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
   const char *url = luaL_checklstring(L, 1, &inlength);
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
@@ -216,7 +237,9 @@ int l_version_info (lua_State *L) {
 
 /* just test if called with easy hander */ 
 int l_easy_dummy(lua_State *L) {
-  CURL *curl = LUACURL_UPVALUE(L);
+  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);
+  printf("Got option: %d\n", *optionp);
   lua_pushfstring(L, "cURL (%p)", curl);
   return 1;
 }

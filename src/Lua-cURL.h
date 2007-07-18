@@ -15,7 +15,15 @@
 
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
-#define LUACURL_UPVALUE(L) (CURL *) lua_touserdata(L, lua_upvalueindex(1));
+#define LUACURL_CURLP_UPVALUE(L, INDEX) (CURL *) lua_touserdata(L, lua_upvalueindex(INDEX));
+#define LUACURL_OPTIONP_UPVALUE(L, INDEX) (CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX));
+
+/* struction for cURL.setopt closure registration */
+typedef struct luaL_Reg_Setopt {
+  const char *name;
+  CURLoption option; 
+  lua_CFunction func;
+} luaL_Reg_Setopt;
 
 /* Lua closures (CURL* upvalue) */
 int l_tostring (lua_State *L);
