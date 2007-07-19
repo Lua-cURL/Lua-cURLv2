@@ -15,10 +15,15 @@
 
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
-#define LUACURL_CURLP_UPVALUE(L, INDEX) (CURL *) lua_touserdata(L, lua_upvalueindex(INDEX));
-#define LUACURL_OPTIONP_UPVALUE(L, INDEX) (CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX));
+#define LUACURL_PRIVATEP_UPVALUE(L, INDEX) ((l_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
+#define LUACURL_OPTIONP_UPVALUE(L, INDEX) ((CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 
-/* struction for cURL.setopt closure registration */
+typedef struct l_private {
+  CURL *curl; 
+  char error[CURL_ERROR_SIZE];
+} l_private;
+
+/* struct for cURL.setopt closure registration */
 typedef struct luaL_Reg_Setopt {
   const char *name;
   CURLoption option; 
@@ -27,9 +32,14 @@ typedef struct luaL_Reg_Setopt {
 
 /* Lua closures (CURL* upvalue) */
 int l_tostring (lua_State *L);
-int l_easy_dummy (lua_State *L);
+
+/* setopt closures */
+int l_easy_opt_long (lua_State *L);
+int l_easy_opt_string (lua_State *L);
+
 int l_easy_escape (lua_State *L);
 int l_easy_init (lua_State *L);
+int l_easy_perform (lua_State *L);
 int l_easy_unescape (lua_State *L);
 
 /* Lua module functions */

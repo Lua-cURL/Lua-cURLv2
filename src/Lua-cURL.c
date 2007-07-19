@@ -1,17 +1,26 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
+/* malloc */
+#include <stdlib.h>
+
 /* closures assigned to easy table */
 static const struct luaL_Reg luacurl_c[] = {
-  {"easy_dummy", l_easy_dummy},
   {"easy_escape", l_easy_escape},
+  {"easy_perform", l_easy_perform},
   {"easy_unescape", l_easy_unescape},
   {NULL, NULL}};
 
 /* closures assigned to setopt in easy table */
 static struct luaL_Reg_Setopt luacurl_opt_c[] = {
-  {"verbose", CURLOPT_VERBOSE, l_easy_dummy},
-  {"header", CURLOPT_HEADER, l_easy_dummy},
+  /* behavior options */
+  {"verbose", CURLOPT_VERBOSE, l_easy_opt_long},
+  {"header", CURLOPT_HEADER, l_easy_opt_long},
+  {"noprogrss", CURLOPT_NOPROGRESS, l_easy_opt_long},
+  {"nosignal", CURLOPT_NOSIGNAL, l_easy_opt_long},
+  /* callback options */
+  /* network options */
+  {"url", CURLOPT_URL, l_easy_opt_string},
   /* dummy opt value */
   {NULL, CURLOPT_VERBOSE, NULL}};	
 
@@ -34,7 +43,7 @@ static const struct luaL_Reg luacurl_m[] = {
 
 int l_easy_escape(lua_State *L) {
   int length = 0;
-  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
+  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_easy_escape(curl, url, length);
   lua_pushstring(L, rurl);
@@ -43,31 +52,38 @@ int l_easy_escape(lua_State *L) {
 }
 
 
+int l_easy_perform(lua_State *L) {
+  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  printf("CurlP: %p\n", curl);
+  if (curl_easy_perform(curl) != CURLE_OK) 
+    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+  return 0;
+}
+
 int l_easy_init(lua_State *L) {
   luaL_Reg_Setopt *setopts;
-  CURL *curl = curl_easy_init( );
-  if (curl == NULL) 
+  l_private *privp = malloc(sizeof(l_private)); 
+  
+  if ((privp->curl = curl_easy_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
+
+  /* set error buffer */
+  if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
+    return luaL_error(L, "cannot set error buffer");
 
   lua_newtable(L);
 
-  /* create closures using *curl as upvalue */
-  lua_pushlightuserdata(L, curl); 
+  /* create closures using private data as upvalue */
+  lua_pushlightuserdata(L, privp); 
   luaI_openlib (L, NULL, luacurl_c, 1);
 
   
   for (setopts = luacurl_opt_c; setopts->name; setopts++) {
     CURLoption *optionp = &(setopts->option);
-    stackDump(L);
-    lua_pushlightuserdata(L, curl); 
+    lua_pushlightuserdata(L, privp); 
     lua_pushlightuserdata(L, optionp);
-    printf("Position of Ligthuserdata: %p\n", optionp);
-    printf("Position of Ligthuserdata: %p\n", curl);
-    stackDump(L);
     lua_pushcclosure(L, setopts->func, 2);
-    stackDump(L);
     lua_setfield(L, -2, setopts->name);
-    stackDump(L);
   }
   /* return table */
   return 1;			
@@ -77,7 +93,7 @@ int l_easy_init(lua_State *L) {
 int l_easy_unescape(lua_State *L) {
   int inlength = 0;
   int outlength;
-  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
+  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   const char *url = luaL_checklstring(L, 1, &inlength);
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
@@ -236,11 +252,22 @@ int l_version_info (lua_State *L) {
 
 
 /* just test if called with easy hander */ 
-int l_easy_dummy(lua_State *L) {
-  CURL *curl = LUACURL_CURLP_UPVALUE(L, 1);
+int l_easy_opt_long(lua_State *L) {
+  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);
-  printf("Got option: %d\n", *optionp);
-  lua_pushfstring(L, "cURL (%p)", curl);
+  long value = luaL_checklong(L,1);
+  int rc = curl_easy_setopt(curl, *optionp, value);
+  lua_pushboolean(L, rc == CURLE_OK);
+  return 1;
+}
+
+l_easy_opt_string(lua_State *L) {
+  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);  
+  const char *value = luaL_checkstring(L,1);
+  int rc = curl_easy_setopt(curl, *optionp, value);
+  lua_pushboolean(L, rc == CURLE_OK);
+  printf("CurlP: %p\n", curl);
   return 1;
 }
 
