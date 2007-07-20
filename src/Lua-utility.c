@@ -20,6 +20,7 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
+#include <stdio.h>
 
 #include "Lua-utility.h"
 
@@ -28,10 +29,10 @@ void stackDump (lua_State *L) {
   int top = lua_gettop(L);
   for (i = 1; i <= top; i++) {  /* repeat for each level */
 	int t = lua_type(L, i);
+	printf("%d: ", i);
 	switch (t) {
-
 	  case LUA_TSTRING:  /* strings */
-		printf("`%s'", lua_tostring(L, i));
+		printf("`%s'\n", lua_tostring(L, i));
 		break;
 
 	  case LUA_TBOOLEAN:  /* booleans */
@@ -39,11 +40,11 @@ void stackDump (lua_State *L) {
 		break;
 
 	  case LUA_TNUMBER:  /* numbers */
-		printf("%g", lua_tonumber(L, i));
+		printf("%g\n", lua_tonumber(L, i));
 		break;
 
 	  default:  /* other values */
-		printf("%s", lua_typename(L, t));
+		printf("%s\n", lua_typename(L, t));
 		break;
 
 	}
