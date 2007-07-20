@@ -40,6 +40,7 @@
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
 #define LUACURL_PRIVATEP_UPVALUE(L, INDEX) ((l_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_OPTIONP_UPVALUE(L, INDEX) ((CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX)))
+#define LUACURL_INFOP_UPVALUE(L, INDEX) ((CURLINFO *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 
 typedef struct l_private {
   CURL *curl; 
@@ -57,6 +58,13 @@ int l_easy_escape (lua_State *L);
 int l_easy_init (lua_State *L);
 int l_easy_perform (lua_State *L);
 int l_easy_unescape (lua_State *L);
+
+/* getinfo closures */
+
+int l_easy_getinfo_string (lua_State *L);
+int l_easy_getinfo_long (lua_State *L);
+int l_easy_getinfo_double (lua_State *L);
+int l_easy_getinfo_curl_slist (lua_State *L);
 
 /* Lua module functions */
 int l_easy_init (lua_State *L);
