@@ -59,12 +59,8 @@ int l_easy_init (lua_State *L);
 int l_easy_perform (lua_State *L);
 int l_easy_unescape (lua_State *L);
 
-/* getinfo closures */
-
-int l_easy_getinfo_string (lua_State *L);
-int l_easy_getinfo_long (lua_State *L);
-int l_easy_getinfo_double (lua_State *L);
-int l_easy_getinfo_curl_slist (lua_State *L);
+/* getinfo subtable creation */
+int l_easy_getinfo_newtable (lua_State *L, l_private *privp);
 
 /* Lua module functions */
 int l_easy_init (lua_State *L);
