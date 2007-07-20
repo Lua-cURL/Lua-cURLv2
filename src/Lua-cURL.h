@@ -46,13 +46,6 @@ typedef struct l_private {
   char error[CURL_ERROR_SIZE];
 } l_private;
 
-/* struct for cURL.setopt closure registration */
-typedef struct luaL_Reg_Setopt {
-  const char *name;
-  CURLoption option; 
-  lua_CFunction func;
-} luaL_Reg_Setopt;
-
 /* Lua closures (CURL* upvalue) */
 int l_tostring (lua_State *L);
 

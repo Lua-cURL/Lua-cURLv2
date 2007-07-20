@@ -34,8 +34,13 @@ static const struct luaL_Reg luacurl_c[] = {
   {"easy_unescape", l_easy_unescape},
   {NULL, NULL}};
 
-/* closures assigned to setopt in easy table */
-static struct luaL_Reg_Setopt luacurl_opt_c[] = {
+
+/* closures assigned to setopt in setopt table */
+static struct {
+  const char *name;
+  CURLoption option; 
+  lua_CFunction func;
+} luacurl_setopt_c[] = {
   /* behavior options */
   {"verbose", CURLOPT_VERBOSE, l_easy_opt_long},
   {"header", CURLOPT_HEADER, l_easy_opt_long},
@@ -85,7 +90,7 @@ int l_easy_perform(lua_State *L) {
 }
 
 int l_easy_init(lua_State *L) {
-  luaL_Reg_Setopt *setopts;
+  int i;
   l_private *privp = malloc(sizeof(l_private)); 
   
   if ((privp->curl = curl_easy_init()) == NULL)
@@ -95,21 +100,29 @@ int l_easy_init(lua_State *L) {
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
 
+  /* easy table (reverences setopt table) */
   lua_newtable(L);
 
   /* create closures using private data as upvalue */
   lua_pushlightuserdata(L, privp); 
   luaI_openlib (L, NULL, luacurl_c, 1);
 
+  /* setopt subtable */
+  lua_newtable(L);		
   
-  for (setopts = luacurl_opt_c; setopts->name; setopts++) {
-    CURLoption *optionp = &(setopts->option);
+  /* assign setopt closures to setopt subtable */
+  for (i=0; luacurl_setopt_c[i].name != NULL; i++) {
+    CURLoption *optionp = &(luacurl_setopt_c[i].option);
     lua_pushlightuserdata(L, privp); 
     lua_pushlightuserdata(L, optionp);
-    lua_pushcclosure(L, setopts->func, 2);
-    lua_setfield(L, -2, setopts->name);
+    lua_pushcclosure(L, luacurl_setopt_c[i].func, 2);
+    lua_setfield(L, -2, luacurl_setopt_c[i].name);
   }
-  /* return table */
+
+  /* assign setopt table to easy table */
+  lua_setfield(L, -2, "setopt");  
+
+  /* return easy table */
   return 1;			
 }
 
