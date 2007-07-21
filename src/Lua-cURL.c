@@ -49,7 +49,7 @@ static const struct luaL_Reg luacurl_m[] = {
   {NULL, NULL}};
 
 int l_easy_escape(lua_State *L) {
-  int length = 0;
+  size_t length = 0;
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_easy_escape(curl, url, length);
@@ -62,30 +62,36 @@ int l_easy_escape(lua_State *L) {
 int l_easy_perform(lua_State *L) {
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   printf("CurlP: %p\n", curl);
+
+  /* check optional callback table */
+  luaL_opt(L, luaL_checktable, 1,lua_newtable(L));
+  
+  /*   /\* set callback handler *\/ */
+  l_easy_setup_writefunction(L, curl);
+  
+  /* Callback Table is on top of Stack */
   if (curl_easy_perform(curl) != CURLE_OK) 
     luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
   return 0;
 }
 
 int l_easy_init(lua_State *L) {
-  int i;
   l_private *privp = malloc(sizeof(l_private)); 
-  
+
   if ((privp->curl = curl_easy_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
   /* set error buffer */
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
-
   /* easy table */
   lua_newtable(L);
-
+  
   /* create closures using private data as upvalue */
   lua_pushlightuserdata(L, privp); 
   luaI_openlib (L, NULL, luacurl_c, 1);
 
-  /* create the setopt table */
+    /* create the setopt table */
   l_easy_setopt_newtable(L, privp);
   /* and assign to easy table */
   lua_setfield(L, -2, "setopt");  
@@ -94,7 +100,7 @@ int l_easy_init(lua_State *L) {
   l_easy_getinfo_newtable(L, privp);
   /* and assign to the easy table */
   lua_setfield(L, -2, "getinfo");  
-  
+
   /* return easy table */
   return 1;			
 }
@@ -110,7 +116,7 @@ int l_getdate(lua_State *L) {
 
 
 int l_easy_unescape(lua_State *L) {
-  int inlength = 0;
+  size_t inlength = 0;
   int outlength;
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   const char *url = luaL_checklstring(L, 1, &inlength);
@@ -128,7 +134,7 @@ int l_tostring (lua_State *L) {
 
 /* deprecated */
 int l_unescape(lua_State *L) {
-  int length;
+  size_t length;
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_unescape(url, length);
   lua_pushstring(L, rurl);
@@ -272,7 +278,7 @@ int l_version_info (lua_State *L) {
 int l_easy_gc(lua_State *L) {
   CURL *curl = LUACURL_CHECKEASY(L);
   curl_easy_cleanup(curl);
-  printf("Handle %x gone\n", curl);
+  printf("Handle %p gone\n", curl);
   return 0;
 }
 

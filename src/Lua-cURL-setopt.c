@@ -56,6 +56,7 @@ static struct {
   {"noprogrss", CURLOPT_NOPROGRESS, l_easy_setopt_long},
   {"nosignal", CURLOPT_NOSIGNAL, l_easy_setopt_long},
   /* callback options */
+  /* implemented differently */
   /* network options */
   {"url", CURLOPT_URL, l_easy_setopt_string},
 

@@ -21,13 +21,48 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
-#ifndef LUA_UTILITY_H
-#define LUA_UTILITY_H
-
-#include <lua.h>
-
-#define luaL_checktable(L, n) luaL_checktype(L, n, LUA_TTABLE)
-void stackDump (lua_State *L);
+#include "Lua-cURL.h"
+#include "Lua-utility.h"
 
 
-#endif
+static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stream) {
+  lua_State* L = (lua_State*)stream;
+  lua_getfield(L, -1, "writefunction");
+  if (lua_isnil(L, -1)) {
+    printf("No Callback\n");
+    lua_pop(L, 1);
+  }
+  else {
+    lua_pushlstring(L, (char*) ptr, nmemb * size);
+    lua_call(L, 1, 0);
+  }
+  return nmemb*size;
+}
+
+int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
+  
+  /* Lua State as userdata argument */
+  if (curl_easy_setopt(curl, CURLOPT_WRITEDATA ,L) != CURLE_OK)
+    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+
+  if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, l_easy_writefunction) != CURLE_OK)
+    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+  return 0;
+}
+
+
+/* create callback subtable */
+int l_easy_callback_newtable(lua_State *L) {
+  int i = 0;
+  char *callbacks[] = {"readfunction", "writefunction" , NULL};
+
+  lua_newtable(L);		
+  while (callbacks[i] != NULL) {
+    printf("Registration");
+    lua_pushboolean(L, 0);	/* default no callback */
+    lua_setfield(L, -2, callbacks[i++]);
+  }
+		 
+  /* callback table is on top of the stack */
+  return 1;
+}
