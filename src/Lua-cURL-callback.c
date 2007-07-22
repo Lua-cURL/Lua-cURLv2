@@ -27,15 +27,18 @@
 
 static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stream) {
   lua_State* L = (lua_State*)stream;
+  lua_getfenv(L, lua_upvalueindex(1));
+  /*   lua_getfenv(L, lua_upvalueindex(1)); */
+  stackDump(L);
   lua_getfield(L, -1, "writefunction");
   if (lua_isnil(L, -1)) {
     printf("No Callback\n");
-    lua_pop(L, 1);
   }
   else {
     lua_pushlstring(L, (char*) ptr, nmemb * size);
     lua_call(L, 1, 0);
   }
+  lua_pop(L, 1);		/* remove environment from stack */
   return nmemb*size;
 }
 
