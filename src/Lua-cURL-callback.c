@@ -25,6 +25,23 @@
 #include "Lua-utility.h"
 
 
+static int l_easy_headerfunction(void *ptr, size_t size, size_t nmemb, void *stream) {
+  lua_State* L = (lua_State*)stream;
+  lua_getfenv(L, lua_upvalueindex(1));
+  /*   lua_getfenv(L, lua_upvalueindex(1)); */
+  lua_getfield(L, -1, "headerfunction");
+  stackDump(L);
+  if (lua_isnil(L, -1)) {
+    printf("No Callback\n");
+  }
+  else {
+    lua_pushlstring(L, (char*) ptr, nmemb * size);
+    lua_call(L, 1, 0);
+  }
+  lua_settop(L, 0);
+  return nmemb*size;
+}
+
 static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stream) {
   lua_State* L = (lua_State*)stream;
   lua_getfenv(L, lua_upvalueindex(1));
@@ -38,9 +55,10 @@ static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stre
     lua_pushlstring(L, (char*) ptr, nmemb * size);
     lua_call(L, 1, 0);
   }
-  lua_pop(L, 1);		/* remove environment from stack */
+  lua_settop(L, 0);
   return nmemb*size;
 }
+
 
 int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
   
@@ -53,6 +71,16 @@ int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
   return 0;
 }
 
+int l_easy_setup_headerfunction(lua_State *L, CURL* curl) {
+  
+  /* Lua State as userdata argument */
+  if (curl_easy_setopt(curl, CURLOPT_WRITEHEADER ,L) != CURLE_OK)
+    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+
+  if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, l_easy_headerfunction) != CURLE_OK)
+    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+  return 0;
+}
 
 /* create callback subtable */
 int l_easy_callback_newtable(lua_State *L) {

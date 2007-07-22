@@ -64,6 +64,7 @@ int l_easy_perform(lua_State *L) {
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   
   l_easy_setup_writefunction(L, curl);
+  l_easy_setup_headerfunction(L, curl);
   
   if (curl_easy_perform(curl) != CURLE_OK) 
     luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);

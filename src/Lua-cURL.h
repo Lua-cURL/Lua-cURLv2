@@ -66,6 +66,7 @@ int l_easy_callback_newtable(lua_State *L);
 
 /* setup callback function */
 int l_easy_setup_writefunction(lua_State *L, CURL* curl);
+int l_easy_setup_headerfunction(lua_State *L, CURL* curl);
 
 /* Lua module functions */
 int l_easy_init (lua_State *L);
