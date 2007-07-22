@@ -27,7 +27,8 @@
 #include <lua.h>
 
 #define luaL_checktable(L, n) luaL_checktype(L, n, LUA_TTABLE)
-void stackDump (lua_State *L);
+#define stackDump(L) _stackDump(L, __FILE__, __LINE__)
+void _stackDump (lua_State *L, const char* file, int line);
 
 
 #endif

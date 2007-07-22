@@ -24,9 +24,10 @@
 
 #include "Lua-utility.h"
 
-void stackDump (lua_State *L) {
+void _stackDump (lua_State *L, const char *file, int line) {
   int i;
   int top = lua_gettop(L);
+  printf("%s:%d: Stackdump\n", file, line);
   for (i = 1; i <= top; i++) {  /* repeat for each level */
 	int t = lua_type(L, i);
 	printf("%d: ", i);
