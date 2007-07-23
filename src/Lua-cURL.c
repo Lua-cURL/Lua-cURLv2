@@ -63,19 +63,23 @@ int l_easy_perform(lua_State *L) {
   luaL_checkudata(L, lua_upvalueindex(1), LUACURL_EASYMETATABLE);
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   
-  l_easy_setup_writefunction(L, curl);
-  l_easy_setup_headerfunction(L, curl);
-  
   if (curl_easy_perform(curl) != CURLE_OK) 
     luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
   return 0;
 }
 
 int l_easy_init(lua_State *L) {
-  l_private *privp = (l_private *) lua_newuserdata(L, sizeof(l_private));
+  l_private *privp;
+
+  /* check optional callback table */
+  luaL_opt(L, luaL_checktable, 1, lua_newtable(L));
+
+  /* create userdata and assign metatable */
+  privp = (l_private *) lua_newuserdata(L, sizeof(l_private));
   luaL_getmetatable(L, LUACURL_EASYMETATABLE);
   lua_setmetatable(L, -2);
 
+  stackDump(L);
   if ((privp->curl = curl_easy_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
@@ -83,13 +87,24 @@ int l_easy_init(lua_State *L) {
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
 
-  /* check optional callback table */
-  luaL_opt(L, luaL_checktable, 1, lua_newtable(L));
+  /* setup write callback function only if entry exists in callback-table */
+  lua_getfield(L, 1, "writefunction");
+
+  if (lua_isfunction(L, -1))
+    l_easy_setup_writefunction(L, privp->curl);
+  lua_pop(L, 1);
+  
+  /* setup header callback function only if entry exists in callback-table */  
+  lua_getfield(L, 1, "headerfunction");
+
+  if (lua_isfunction(L, -1)) 
+    l_easy_setup_headerfunction(L, privp->curl);
+  lua_pop(L, 1);
 
   /* set table of callback functions  as environment for userdata*/
   lua_pushvalue(L, 1);		
   lua_setfenv(L, -2);
-  stackDump(L);
+
   /* easy table */
   lua_newtable(L);
 
