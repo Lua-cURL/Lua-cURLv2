@@ -70,7 +70,7 @@ int l_easy_perform(lua_State *L) {
 
 int l_easy_init(lua_State *L) {
   l_private *privp;
-
+  
   /* check optional callback table */
   luaL_opt(L, luaL_checktable, 1, lua_newtable(L));
 
@@ -79,7 +79,6 @@ int l_easy_init(lua_State *L) {
   luaL_getmetatable(L, LUACURL_EASYMETATABLE);
   lua_setmetatable(L, -2);
 
-  stackDump(L);
   if ((privp->curl = curl_easy_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
@@ -145,12 +144,6 @@ int l_easy_unescape(lua_State *L) {
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
   curl_free(rurl);
-  return 1;
-}
-
-int l_tostring (lua_State *L) {
-  CURL *curl = LUACURL_CHECKEASY(L);
-  lua_pushfstring(L, "cURL (%p)", curl);
   return 1;
 }
 
@@ -298,9 +291,9 @@ int l_version_info (lua_State *L) {
 }
 
 int l_easy_gc(lua_State *L) {
-  CURL *curl = LUACURL_CHECKEASY(L);
-  curl_easy_cleanup(curl);
-  printf("Handle %p gone\n", curl);
+  /* gc resources optained by cURL userdata */
+  l_private *privp = lua_touserdata(L, 1);
+  curl_easy_cleanup(privp->curl);
   return 0;
 }
 
@@ -308,10 +301,6 @@ int l_easy_gc(lua_State *L) {
 int luaopen_cURL(lua_State *L) {
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
   
-  /* set easymetatable.__index = easymetatable */
-  lua_pushvalue(L, -1);
-  lua_setfield(L, -2, "__index");
-
   /* register in easymetatable */
   luaL_register(L, NULL, luacurl_m);  
 
