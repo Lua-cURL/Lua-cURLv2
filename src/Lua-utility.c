@@ -32,6 +32,14 @@ const char* luaL_getstrfield(lua_State* L, const char* key) {
   return val;
 }
 
+const char* luaL_getlstrfield(lua_State* L, const char* key, int *len) {
+  const char *val;
+  lua_getfield(L, -1, key);
+  val = lua_isnil(L, -1)? NULL : lua_tolstring(L, -1, len);
+  lua_pop(L, 1);
+  return val;
+}
+
 void _stackDump (lua_State *L, const char *file, int line) {
   int i;
   int top = lua_gettop(L);
