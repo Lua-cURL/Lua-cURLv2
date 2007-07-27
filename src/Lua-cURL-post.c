@@ -63,39 +63,50 @@ int l_easy_post(lua_State *L) {
     key = lua_tostring(L, -1); 
     lua_pop(L, 1);
 
-    /* got {name= {file=blah,
-                  {type="text/html"}
+    /* got {name = {file="/tmp/test.txt",
+                    type="text/plain"}}
+       or  {name = {data="<html><bold>bold</bold></html>,
+                    type="text/html"}}
     */
     if (lua_istable(L, -1)) {
-      const char* type = NULL;
+      const char* type, *file, *data;
+      CURLFORMcode rc = CURLE_OK;
 
       /* check for type option */
-      lua_getfield(L, -1, "type");
-      type = lua_isnil(L, -1)? NULL : lua_tostring(L, -1);
-      lua_pop(L, 1);
+      type = luaL_getstrfield(L, "type");
       
-      /* fileupload */
-      lua_getfield(L, -1, "file");
-      if (!lua_isnil(L, -1)) {
-	const char *filename = lua_tostring(L, -1);
-	
-	/* Add file/contenttype section */
-	if (((type == NULL)? 
-	     curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
-			  CURLFORM_FILE, filename, CURLFORM_END):
-	     curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
-			  CURLFORM_FILE, filename,
-			  CURLFORM_CONTENTTYPE, type, CURLFORM_END)) != CURLE_OK)
-	  luaL_error(L, "cannot set upload filename: %s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+      /* check for file option */
+      file = luaL_getstrfield(L, "file");
+
+      /* check for data option */
+      data = luaL_getstrfield(L, "data");
+      
+      /* file upload */
+      if (file != NULL) {
+	printf("Doing:%s:%s\n", key, file);
+ 	rc = (type == NULL)?
+ 	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key, 
+ 		       CURLFORM_FILE, file, CURLFORM_END): 
+	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key, 
+ 		       CURLFORM_FILE, file, 
+ 		       CURLFORM_CONTENTTYPE, type, CURLFORM_END); 
       }
-      else
-	printf("Unnown\n");
-      lua_pop(L, 1);
+      /* data field */
+      else if (data != NULL) {
+	rc = (type != NULL)? 
+	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
+		       CURLFORM_COPYCONTENTS, data,
+		       CURLFORM_CONTENTTYPE, type, CURLFORM_END):
+	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key, CURLFORM_COPYCONTENTS, data, CURLFORM_END);
+      }
+      else 
+	luaL_error(L, "Mandatory: \"data\" or \"file\"");
+      if (rc != CURLE_OK) 
+	luaL_error(L, "cannot add form: %s", curl_easy_strerror(rc));
     }
     /* go name=value */
     else {
       value = luaL_checkstring(L, -1);
-      
       /* add name/content section */
       curl_formadd(&post, &last, CURLFORM_COPYNAME, key, CURLFORM_COPYCONTENTS, value, CURLFORM_END);
     }

@@ -24,6 +24,14 @@
 
 #include "Lua-utility.h"
 
+const char* luaL_getstrfield(lua_State* L, const char* key) {
+  const char *val;
+  lua_getfield(L, -1, key);
+  val = lua_isnil(L, -1)? NULL : lua_tostring(L, -1);
+  lua_pop(L, 1);
+  return val;
+}
+
 void _stackDump (lua_State *L, const char *file, int line) {
   int i;
   int top = lua_gettop(L);
