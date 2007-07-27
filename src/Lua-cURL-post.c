@@ -34,6 +34,9 @@ int l_easy_post(lua_State *L) {
   int index_next, index_table, index_key;
   const char *value, *key;
 
+  struct curl_httppost* post = NULL;
+  struct curl_httppost* last = NULL;
+
   /* param verification */
   luaL_checktable(L, 1);
 
@@ -50,19 +53,48 @@ int l_easy_post(lua_State *L) {
     lua_pushvalue(L, index_next);
     lua_pushvalue(L, index_table);
     lua_pushvalue(L, index_key);
+    stackDump(L);
 
     lua_call(L, 2, 2);  
     if (lua_isnil(L, -2)) 
       break;
-    value = luaL_checkstring(L, -1);
-    key = luaL_checkstring(L, -2);
-    printf("%s:%s\n", key, value);
+
+    /* duplicate key before converting to string (we need the original type for the iter function) */
+    lua_pushvalue(L, -2);
+    key = lua_tostring(L, -1); 
+    lua_pop(L, 1);
+
+    /* got {name= {file=blah,
+                  {type="text/html"}
+    */
+    if (lua_istable(L, -1)) {
+      printf("Todo\n");
+    }
+    /* go name=value */
+    else {
+      value = luaL_checkstring(L, -1);
+      
+      /* add name/content section */
+      curl_formadd(&post, &last, CURLFORM_COPYNAME, key, CURLFORM_COPYCONTENTS, value, CURLFORM_END);
+    
+    /* add name/content/contenttype section */
+      curl_formadd(&post, &last, CURLFORM_COPYNAME, "picture",
+		 CURLFORM_FILE, "/etc/passwd", CURLFORM_END);
+     /* Add simple name/content/contenttype section */
+      curl_formadd(&post, &last, CURLFORM_COPYNAME, "htmlcode",
+		   CURLFORM_COPYCONTENTS, "<HTML></HTML>",
+		   CURLFORM_CONTENTTYPE, "text/html", CURLFORM_END);
+
+      printf("%s:%s\n", key, value);
+    }
+    
     /* remove value */
     lua_pop(L, 1);			
     /* move key */
     lua_replace(L, index_key);
   }
-  lua_settop(L, index_next - 1);
+  
+  curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
   return 0;
 }
  /*  long value = luaL_checklong(L,1); */
