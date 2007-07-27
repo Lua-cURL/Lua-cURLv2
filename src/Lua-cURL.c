@@ -32,6 +32,7 @@ static const struct luaL_Reg luacurl_c[] = {
   {"easy_escape", l_easy_escape},
   {"easy_perform", l_easy_perform},
   {"easy_unescape", l_easy_unescape},
+  {"easy_post", l_easy_post},
   {NULL, NULL}};
 
 /* functions in module namespace*/
@@ -109,7 +110,6 @@ int l_easy_init(lua_State *L) {
 
   /* Use userdata as upvalue 1 */
   lua_pushvalue(L, -2);
-  stackDump(L);
   luaI_openlib (L, NULL, luacurl_c, 1);
 
     /* create the setopt table */
