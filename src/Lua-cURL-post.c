@@ -53,7 +53,6 @@ int l_easy_post(lua_State *L) {
     lua_pushvalue(L, index_next);
     lua_pushvalue(L, index_table);
     lua_pushvalue(L, index_key);
-    stackDump(L);
 
     lua_call(L, 2, 2);  
     if (lua_isnil(L, -2)) 
@@ -68,7 +67,30 @@ int l_easy_post(lua_State *L) {
                   {type="text/html"}
     */
     if (lua_istable(L, -1)) {
-      printf("Todo\n");
+      const char* type = NULL;
+
+      /* check for type option */
+      lua_getfield(L, -1, "type");
+      type = lua_isnil(L, -1)? NULL : lua_tostring(L, -1);
+      lua_pop(L, 1);
+      
+      /* fileupload */
+      lua_getfield(L, -1, "file");
+      if (!lua_isnil(L, -1)) {
+	const char *filename = lua_tostring(L, -1);
+	
+	/* Add file/contenttype section */
+	if (((type == NULL)? 
+	     curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
+			  CURLFORM_FILE, filename, CURLFORM_END):
+	     curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
+			  CURLFORM_FILE, filename,
+			  CURLFORM_CONTENTTYPE, type, CURLFORM_END)) != CURLE_OK)
+	  luaL_error(L, "cannot set upload filename: %s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+      }
+      else
+	printf("Unnown\n");
+      lua_pop(L, 1);
     }
     /* go name=value */
     else {
@@ -76,16 +98,6 @@ int l_easy_post(lua_State *L) {
       
       /* add name/content section */
       curl_formadd(&post, &last, CURLFORM_COPYNAME, key, CURLFORM_COPYCONTENTS, value, CURLFORM_END);
-    
-    /* add name/content/contenttype section */
-      curl_formadd(&post, &last, CURLFORM_COPYNAME, "picture",
-		 CURLFORM_FILE, "/etc/passwd", CURLFORM_END);
-     /* Add simple name/content/contenttype section */
-      curl_formadd(&post, &last, CURLFORM_COPYNAME, "htmlcode",
-		   CURLFORM_COPYCONTENTS, "<HTML></HTML>",
-		   CURLFORM_CONTENTTYPE, "text/html", CURLFORM_END);
-
-      printf("%s:%s\n", key, value);
     }
     
     /* remove value */
