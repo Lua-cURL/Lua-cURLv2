@@ -42,11 +42,10 @@ int l_easy_post(lua_State *L) {
   lua_call(L, 1, 3);
 
   /* got next, t, k on stack */
-  index_next = lua_gettop(L) - 2;
-  index_table = lua_gettop(L) - 1;
   index_key = lua_gettop(L);
-  /* duplicate ref to next function for following calls to next */
-  
+  index_table = index_key - 1;
+  index_next = index_table - 1;
+
   while (1) {
     lua_pushvalue(L, index_next);
     lua_pushvalue(L, index_table);
