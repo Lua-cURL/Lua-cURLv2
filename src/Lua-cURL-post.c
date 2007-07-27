@@ -33,6 +33,7 @@ int l_easy_post(lua_State *L) {
   CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
   int index_next, index_table, index_key;
   const char *value, *key;
+  
 
   struct curl_httppost* post = NULL;
   struct curl_httppost* last = NULL;
@@ -65,12 +66,14 @@ int l_easy_post(lua_State *L) {
 
     /* got {name = {file="/tmp/test.txt",
                     type="text/plain"}}
-       or  {name = {data="<html><bold>bold</bold></html>,
+       or  {name = {file="dummy.html",
+                    data="<html><bold>bold</bold></html>,
                     type="text/html"}}
     */
     if (lua_istable(L, -1)) {
       const char* type, *file, *data;
       CURLFORMcode rc = CURLE_OK;
+      int datalen;
 
       /* check for type option */
       type = luaL_getstrfield(L, "type");
@@ -79,11 +82,10 @@ int l_easy_post(lua_State *L) {
       file = luaL_getstrfield(L, "file");
 
       /* check for data option */
-      data = luaL_getstrfield(L, "data");
+      data = luaL_getlstrfield(L, "data", &datalen);
       
       /* file upload */
-      if (file != NULL) {
-	printf("Doing:%s:%s\n", key, file);
+      if ((file != NULL) && (data == NULL)) {
  	rc = (type == NULL)?
  	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key, 
  		       CURLFORM_FILE, file, CURLFORM_END): 
@@ -92,15 +94,22 @@ int l_easy_post(lua_State *L) {
  		       CURLFORM_CONTENTTYPE, type, CURLFORM_END); 
       }
       /* data field */
-      else if (data != NULL) {
+      else if ((file != NULL) && (data != NULL)) {
+	printf("Using datalen: %d\n", datalen);
+	/* Add a buffer to upload */
 	rc = (type != NULL)? 
-	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key,
-		       CURLFORM_COPYCONTENTS, data,
-		       CURLFORM_CONTENTTYPE, type, CURLFORM_END):
-	  curl_formadd(&post, &last, CURLFORM_COPYNAME, key, CURLFORM_COPYCONTENTS, data, CURLFORM_END);
+	  curl_formadd(&post, &last,
+		       CURLFORM_COPYNAME, key,
+		       CURLFORM_BUFFER, file, CURLFORM_BUFFERPTR, data, CURLFORM_BUFFERLENGTH, datalen,
+ 		       CURLFORM_CONTENTTYPE, type, 
+		       CURLFORM_END):
+	  curl_formadd(&post, &last,
+		       CURLFORM_COPYNAME, key,
+		       CURLFORM_BUFFER, file, CURLFORM_BUFFERPTR, data, CURLFORM_BUFFERLENGTH, datalen,
+		       CURLFORM_END);
       }
       else 
-	luaL_error(L, "Mandatory: \"data\" or \"file\"");
+	luaL_error(L, "Mandatory: \"file\"");
       if (rc != CURLE_OK) 
 	luaL_error(L, "cannot add form: %s", curl_easy_strerror(rc));
     }
