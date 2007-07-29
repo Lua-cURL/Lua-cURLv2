@@ -28,16 +28,19 @@
 #include <stdlib.h>
 
 /* closures assigned to easy table */
-static const struct luaL_Reg luacurl_c[] = {
-  {"easy_escape", l_easy_escape},
-  {"easy_perform", l_easy_perform},
-  {"easy_unescape", l_easy_unescape},
-  {"easy_post", l_easy_post},
+static const struct luaL_Reg luacurl_easy_c[] = {
+  {"escape", l_easy_escape},
+  {"perform", l_easy_perform},
+  {"unescape", l_easy_unescape},
+  {"post", l_easy_post},
+  /* not for public use */
+  {"userdata", l_easy_userdata},
   {NULL, NULL}};
 
 /* functions in module namespace*/
 static const struct luaL_Reg luacurl_f[] = {
   {"easy_init", l_easy_init},
+  {"multi_init", l_multi_init},
   {"getdate", l_getdate},
   {"unescape", l_unescape},
   {"version", l_version},
@@ -110,7 +113,7 @@ int l_easy_init(lua_State *L) {
 
   /* Use userdata as upvalue 1 */
   lua_pushvalue(L, -2);
-  luaI_openlib (L, NULL, luacurl_c, 1);
+  luaI_openlib (L, NULL, luacurl_easy_c, 1);
 
     /* create the setopt table */
   l_easy_setopt_newtable(L, privp);
@@ -144,6 +147,11 @@ int l_easy_unescape(lua_State *L) {
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
   curl_free(rurl);
+  return 1;
+}
+
+int l_easy_userdata (lua_State *L) {
+  lua_pushvalue(L, lua_upvalueindex(1));
   return 1;
 }
 
@@ -300,7 +308,8 @@ int l_easy_gc(lua_State *L) {
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
-  
+  luaL_newmetatable(L, LUACURL_MULTIMETATABLE);  
+
   /* register in easymetatable */
   luaL_register(L, NULL, luacurl_m);  
 
