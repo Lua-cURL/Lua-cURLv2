@@ -30,7 +30,8 @@
 #include "Lua-utility.h"
 
 int l_easy_post(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
   int index_next, index_table, index_key;
   const char *value, *key;
   
@@ -39,10 +40,10 @@ int l_easy_post(lua_State *L) {
   struct curl_httppost* last = NULL;
 
   /* param verification */
-  luaL_checktable(L, 1);
+  luaL_checktable(L, 2);
 
   lua_getglobal(L, "pairs");
-  lua_pushvalue(L, 1);
+  lua_pushvalue(L, 2);
   lua_call(L, 1, 3);
 
   /* got next, t, k on stack */
@@ -129,19 +130,3 @@ int l_easy_post(lua_State *L) {
   curl_easy_setopt(curl, CURLOPT_HTTPPOST, post);
   return 0;
 }
- /*  long value = luaL_checklong(L,1); */
-/*     if ((rbce->postdata_buffer = rb_funcall(args_ary, idJoin, 1, rbstrAmp)) == Qnil) { */
-/*       rb_raise(eCurlErrError, "Failed to join arguments"); */
-/*       return Qnil; */
-/*     } else {  */
-/*       data = StringValuePtr(rbce->postdata_buffer);    */
-/*       len = RSTRING_LEN(rbce->postdata_buffer); */
-      
-/*       curl_easy_setopt(curl, CURLOPT_POST, 1); */
-/*       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data); */
-/*       curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len); */
-
-/*       return handle_perform(rbce); */
-/*     } */
-/*   } */
-/* } */
