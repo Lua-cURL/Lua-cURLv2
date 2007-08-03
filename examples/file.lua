@@ -3,17 +3,20 @@ require("cURL")
 -- open output file
 f = io.open("example_homepage", "w")
 
--- setup easy with writecallback handler
-c = cURL.easy_init({writefunction = function(str)
-				       f:write(str)
-				    end})
+c = cURL.easy_init()
 -- setup url
-c.setopt.url("http://www.example.com/")
+c:setopt_url("http://www.example.com/")
 
 -- perform, invokes callbacks
-c.easy_perform()
+c:perform({writefunction = function(str) 
+				f:write(str)
+			     end,
+	   headerfunction = print})
+       
+
 
 -- close output file
 f:close()
+print("Done")
 
 

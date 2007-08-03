@@ -75,11 +75,16 @@ int l_easy_perform(lua_State *L) {
   
   /* setup write callback function only if entry exists in callback-table */
   lua_getfield(L, 2, "writefunction");
-  if (lua_isfunction(L, -1)) {
-    printf("Setting handlers\n");
+  if (lua_isfunction(L, -1)) 
     l_easy_setup_writefunction(L, privatep->curl);
-  }
   lua_pop(L, 1);
+
+  /* setup header callback function only if entry exists in callback-table */
+  lua_getfield(L, 2, "headerfunction");
+  if (lua_isfunction(L, -1))
+    l_easy_setup_headerfunction(L, privatep->curl);
+  lua_pop(L, 1);
+
 
   /* callback table is on top on stack */
   stackDump(L);
@@ -106,11 +111,6 @@ int l_easy_init(lua_State *L) {
     return luaL_error(L, "cannot set error buffer");
 
  
-/*   /\* setup header callback function only if entry exists in callback-table *\/   */
-/*   lua_getfield(L, 1, "headerfunction"); */
-/*   if (lua_isfunction(L, -1))  */
-/*     l_easy_setup_headerfunction(L, privp->curl); */
-/*   lua_pop(L, 1); */
 
   /* set table of callback functions  as environment for userdata*/
 /*   lua_pushvalue(L, 1);		 */
