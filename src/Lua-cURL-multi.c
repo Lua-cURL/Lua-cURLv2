@@ -40,6 +40,15 @@ int l_multi_init(lua_State *L) {
   return 1;			
 }
 
+static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *stream) {
+  lua_State* L = (lua_State*)stream;
+  printf("InternalCallback\n");
+  lua_pushlstring(L, ptr, nmemb*size);
+  stackDump(L);
+  return nmemb*size;
+}
+
+
 int l_multi_add_handle (lua_State *L) {
   l_multi_private *privatep = luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
   CURLM *curlm = privatep->curlm;
@@ -51,24 +60,49 @@ int l_multi_add_handle (lua_State *L) {
   if ((rc = curl_multi_add_handle(curlm, easyp->curl)) != CURLM_OK)
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
 
+  /* settup internal callback */
+  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEDATA ,L) != CURLE_OK)
+    luaL_error(L, "%s", easyp->error);
+  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEFUNCTION, l_multi_internalcallback) != CURLE_OK)
+    luaL_error(L, "%s", easyp->error);
   return 0;
 }
 
-int l_multi_perform (lua_State *L) {
+static int l_multi_perform_internal (lua_State *L) {
+  l_multi_private *privatep = LUACURL_PRIVATE_MULTIP_UPVALUE(L, 1);
+  CURLM *curlm = privatep->curlm;
   CURLMcode rc;
-  luaL_checkudata(L, lua_upvalueindex(1), LUACURL_MULTIMETATABLE);  
-  CURLM *curlm = LUACURL_PRIVATE_MULTIP_UPVALUE(L, 1)->curlm;
-  int value;
+  int remain = 1;
 
-  return 0;
-  rc = curl_multi_perform(curlm, &value);
-  if (rc == CURLM_CALL_MULTI_PERFORM) {
-    printf("Try again\n");
+  int prev_top = lua_gettop(L);
+  int current_top;
+  /* need to read more data */
+  while (remain) {
+    rc = curl_multi_perform(curlm, &remain);
+    switch (rc) {
+    case CURLM_CALL_MULTI_PERFORM:
+      break;
+    case CURLM_OK:
+      current_top = lua_gettop(L);
+      if ( current_top > prev_top) { 
+	lua_concat(L, current_top - prev_top);
+	/* return strings from callbacks */
+	return 1;
+      }
+      break;
+    default:
+      luaL_error(L, "cannot perform: %s", curl_multi_strerror(rc));
+    }
   }
-  else if (rc != CURLM_OK)
-    luaL_error(L, "cannot perform: %s", curl_multi_strerror(rc));
-  
-  lua_pushinteger(L, value);
+
+  /* no more data */
+  return 0;			/* nil */
+}
+
+/* return closure */
+int l_multi_perform (lua_State *L) {
+  luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
+  lua_pushcclosure(L, l_multi_perform_internal, 1);
   return 1;
 }
 

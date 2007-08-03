@@ -78,19 +78,3 @@ int l_easy_clear_writefunction(lua_State *L, CURL* curl) {
     luaL_error(L, "%s", privatep->error);
   return 0;
 }
-
-/* create callback subtable */
-int l_easy_callback_newtable(lua_State *L) {
-  int i = 0;
-  char *callbacks[] = {"readfunction", "writefunction" , NULL};
-
-  lua_newtable(L);		
-  while (callbacks[i] != NULL) {
-    printf("Registration");
-    lua_pushboolean(L, 0);	/* default no callback */
-    lua_setfield(L, -2, callbacks[i++]);
-  }
-		 
-  /* callback table is on top of the stack */
-  return 1;
-}
