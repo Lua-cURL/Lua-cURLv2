@@ -38,15 +38,15 @@
 
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
-#define LUACURL_PRIVATEP_UPVALUE(L, INDEX) ((l_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
+#define LUACURL_PRIVATEP_UPVALUE(L, INDEX) ((l_easy_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_PRIVATE_MULTIP_UPVALUE(L, INDEX) ((l_multi_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_OPTIONP_UPVALUE(L, INDEX) ((CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_INFOP_UPVALUE(L, INDEX) ((CURLINFO *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 
-typedef struct l_private {
+typedef struct l_easy_private {
   CURL *curl; 
   char error[CURL_ERROR_SIZE];
-} l_private;
+} l_easy_private;
 
 typedef struct l_multi_private {
   CURLM *curlm;
@@ -70,10 +70,10 @@ int l_easy_post(lua_State *L);
 /* multi interface */
 int l_multi_init (lua_State *L);
 int l_multi_add_handle (lua_State *L);
-
+int l_multi_perform (lua_State *L);
 /* subtable creation */
-int l_easy_getinfo_newtable (lua_State *L, l_private *privp);
-int l_easy_setopt_newtable (lua_State *L, l_private *privp);
+int l_easy_getinfo_register (lua_State *L);
+int l_easy_setopt_register (lua_State *L);
 int l_easy_callback_newtable(lua_State *L);
 
 /* setup callback function */

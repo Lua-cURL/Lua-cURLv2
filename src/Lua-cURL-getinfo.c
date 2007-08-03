@@ -24,52 +24,59 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-/* closures assigned to getinfo in easy table */
+/* prefix of all registered functions */
+#define P "getinfo_"
 
 static int l_easy_getinfo_string(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;  
-  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 2);
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 1);
   char *value;
 
   if (curl_easy_getinfo(curl, *infop, &value) != CURLE_OK)  
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   
   lua_pushstring(L, value);
   return 1;
 }
 
 static int l_easy_getinfo_long(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;  
-  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 2);
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 1);
   long value;
 
   if (curl_easy_getinfo(curl, *infop, &value) != CURLE_OK)  
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   
   lua_pushinteger(L, value);
   return 1;
 } 
 
 static int l_easy_getinfo_double(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;  
-  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 2);
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 1);
   double value;
-
+  
   if (curl_easy_getinfo(curl, *infop, &value) != CURLE_OK)  
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   
   lua_pushnumber(L, value);
   return 1;
 } 
 
 static int l_easy_getinfo_curl_slist(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;  
-  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 2);  
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLINFO *infop = LUACURL_INFOP_UPVALUE(L, 1);  
   struct curl_slist *list;
   struct curl_slist *next;
   int i;
+  
+  stackDump(L);
   if (curl_easy_getinfo(curl, *infop, &list) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   
   i = 1;
   next = list;
@@ -91,53 +98,49 @@ static struct {
   CURLINFO info; 
   lua_CFunction func;
 } luacurl_getinfo_c[] = {
-  {"effective_url", CURLINFO_EFFECTIVE_URL, l_easy_getinfo_string},
-  {"response_code", CURLINFO_RESPONSE_CODE, l_easy_getinfo_long},
-  {"http_connectcode", CURLINFO_HTTP_CONNECTCODE, l_easy_getinfo_long},
-  {"filetime", CURLINFO_FILETIME, l_easy_getinfo_long},
-  {"total_time", CURLINFO_TOTAL_TIME, l_easy_getinfo_double},
-  {"namelookup_time", CURLINFO_NAMELOOKUP_TIME, l_easy_getinfo_double},
-  {"connect_time", CURLINFO_CONNECT_TIME, l_easy_getinfo_double},
-  {"pretransfer", CURLINFO_PRETRANSFER_TIME, l_easy_getinfo_double},
-  {"starttransfer_time", CURLINFO_STARTTRANSFER_TIME, l_easy_getinfo_double},  
-  {"redirect_time", CURLINFO_REDIRECT_TIME, l_easy_getinfo_double},  
-  {"redirect_count", CURLINFO_REDIRECT_COUNT, l_easy_getinfo_long},  
-  {"size_upload", CURLINFO_SIZE_UPLOAD, l_easy_getinfo_double},
-  {"size_download", CURLINFO_SIZE_DOWNLOAD, l_easy_getinfo_double},
-  {"speed_download", CURLINFO_SPEED_DOWNLOAD, l_easy_getinfo_double},
-  {"speed_upload", CURLINFO_SPEED_UPLOAD, l_easy_getinfo_double},
-  {"header_size", CURLINFO_HEADER_SIZE, l_easy_getinfo_long},
-  {"request_size", CURLINFO_REQUEST_SIZE, l_easy_getinfo_long},
-  {"ssl_verifyresult", CURLINFO_SSL_VERIFYRESULT, l_easy_getinfo_long},
-  {"ssl_engines", CURLINFO_SSL_ENGINES, l_easy_getinfo_curl_slist},
-  {"content_length_download", CURLINFO_CONTENT_LENGTH_DOWNLOAD, l_easy_getinfo_double},
-  {"content_length_upload", CURLINFO_CONTENT_LENGTH_UPLOAD, l_easy_getinfo_double},
-  {"content_type", CURLINFO_CONTENT_TYPE, l_easy_getinfo_string},
-  {"private", CURLINFO_PRIVATE, l_easy_getinfo_string},
-  {"httpauth_avail", CURLINFO_HTTPAUTH_AVAIL, l_easy_getinfo_long},
-  {"proxyauth_avail", CURLINFO_PROXYAUTH_AVAIL, l_easy_getinfo_long},
-  {"os_errno", CURLINFO_OS_ERRNO, l_easy_getinfo_long},
-  {"num_connects", CURLINFO_NUM_CONNECTS, l_easy_getinfo_long},
-  {"cookielist", CURLINFO_COOKIELIST, l_easy_getinfo_curl_slist},
-  {"lastsocket", CURLINFO_LASTSOCKET, l_easy_getinfo_long},
-  {"ftp_entry_path" , CURLINFO_FTP_ENTRY_PATH , l_easy_getinfo_string},  
+  {P"effective_url", CURLINFO_EFFECTIVE_URL, l_easy_getinfo_string},
+  {P"response_code", CURLINFO_RESPONSE_CODE, l_easy_getinfo_long},
+  {P"http_connectcode", CURLINFO_HTTP_CONNECTCODE, l_easy_getinfo_long},
+  {P"filetime", CURLINFO_FILETIME, l_easy_getinfo_long},
+  {P"total_time", CURLINFO_TOTAL_TIME, l_easy_getinfo_double},
+  {P"namelookup_time", CURLINFO_NAMELOOKUP_TIME, l_easy_getinfo_double},
+  {P"connect_time", CURLINFO_CONNECT_TIME, l_easy_getinfo_double},
+  {P"pretransfer", CURLINFO_PRETRANSFER_TIME, l_easy_getinfo_double},
+  {P"starttransfer_time", CURLINFO_STARTTRANSFER_TIME, l_easy_getinfo_double},  
+  {P"redirect_time", CURLINFO_REDIRECT_TIME, l_easy_getinfo_double},  
+  {P"redirect_count", CURLINFO_REDIRECT_COUNT, l_easy_getinfo_long},  
+  {P"size_upload", CURLINFO_SIZE_UPLOAD, l_easy_getinfo_double},
+  {P"size_download", CURLINFO_SIZE_DOWNLOAD, l_easy_getinfo_double},
+  {P"speed_download", CURLINFO_SPEED_DOWNLOAD, l_easy_getinfo_double},
+  {P"speed_upload", CURLINFO_SPEED_UPLOAD, l_easy_getinfo_double},
+  {P"header_size", CURLINFO_HEADER_SIZE, l_easy_getinfo_long},
+  {P"request_size", CURLINFO_REQUEST_SIZE, l_easy_getinfo_long},
+  {P"ssl_verifyresult", CURLINFO_SSL_VERIFYRESULT, l_easy_getinfo_long},
+  {P"ssl_engines", CURLINFO_SSL_ENGINES, l_easy_getinfo_curl_slist},
+  {P"content_length_download", CURLINFO_CONTENT_LENGTH_DOWNLOAD, l_easy_getinfo_double},
+  {P"content_length_upload", CURLINFO_CONTENT_LENGTH_UPLOAD, l_easy_getinfo_double},
+  {P"content_type", CURLINFO_CONTENT_TYPE, l_easy_getinfo_string},
+  {P"private", CURLINFO_PRIVATE, l_easy_getinfo_string},
+  {P"httpauth_avail", CURLINFO_HTTPAUTH_AVAIL, l_easy_getinfo_long},
+  {P"proxyauth_avail", CURLINFO_PROXYAUTH_AVAIL, l_easy_getinfo_long},
+  {P"os_errno", CURLINFO_OS_ERRNO, l_easy_getinfo_long},
+  {P"num_connects", CURLINFO_NUM_CONNECTS, l_easy_getinfo_long},
+  {P"cookielist", CURLINFO_COOKIELIST, l_easy_getinfo_curl_slist},
+  {P"lastsocket", CURLINFO_LASTSOCKET, l_easy_getinfo_long},
+  {P"ftp_entry_path" , CURLINFO_FTP_ENTRY_PATH , l_easy_getinfo_string},  
   {NULL, CURLINFO_EFFECTIVE_URL, NULL}};	
 
 
-/* create getinfo subtable */
-int l_easy_getinfo_newtable(lua_State *L, l_private *privp) {
+int l_easy_getinfo_register(lua_State *L) {
   int i;
 
-  lua_newtable(L);		
-  /* assign getinfo closures to getinfo subtable */
+  /* register getinfo closures */
   for (i=0; luacurl_getinfo_c[i].name != NULL; i++) {
     CURLINFO *infop = &(luacurl_getinfo_c[i].info);
-    lua_pushlightuserdata(L, privp); 
     lua_pushlightuserdata(L, infop);
-    lua_pushcclosure(L, luacurl_getinfo_c[i].func, 2);
+    lua_pushcclosure(L, luacurl_getinfo_c[i].func, 1);
     lua_setfield(L, -2, luacurl_getinfo_c[i].name);
   }  
 
-  /* getinfo table is on top of the stack */
-  return 1;
+  return 0;
 }

@@ -27,17 +27,20 @@
 /* malloc */
 #include <stdlib.h>
 
-/* closures assigned to easy table */
-static const struct luaL_Reg luacurl_easy_c[] = {
+/* methods assigned to easy table */
+static const struct luaL_Reg luacurl_easy_m[] = {
   {"escape", l_easy_escape},
   {"perform", l_easy_perform},
   {"unescape", l_easy_unescape},
   {"post", l_easy_post},
+  {"__gc", l_easy_gc},
   /* not for public use */
   {"userdata", l_easy_userdata},
   {NULL, NULL}};
 
-/* functions in module namespace*/
+
+
+/* global functions in module namespace*/
 static const struct luaL_Reg luacurl_f[] = {
   {"easy_init", l_easy_init},
   {"multi_init", l_multi_init},
@@ -49,12 +52,13 @@ static const struct luaL_Reg luacurl_f[] = {
 
 /* functions assigned to metatable */
 static const struct luaL_Reg luacurl_m[] = {
-  {"__gc", l_easy_gc},
+
   {NULL, NULL}};
 
 int l_easy_escape(lua_State *L) {
   size_t length = 0;
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
   const char *url = luaL_checklstring(L, 1, &length);
   char *rurl = curl_easy_escape(curl, url, length);
   lua_pushstring(L, rurl);
@@ -64,24 +68,24 @@ int l_easy_escape(lua_State *L) {
 
 
 int l_easy_perform(lua_State *L) {
-  luaL_checkudata(L, lua_upvalueindex(1), LUACURL_EASYMETATABLE);
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
   
   if (curl_easy_perform(curl) != CURLE_OK) 
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   return 0;
 }
 
 int l_easy_init(lua_State *L) {
-  l_private *privp;
+  l_easy_private *privp;
   
   /* check optional callback table */
   luaL_opt(L, luaL_checktable, 1, lua_newtable(L));
 
   /* create userdata and assign metatable */
-  privp = (l_private *) lua_newuserdata(L, sizeof(l_private));
+  privp = (l_easy_private *) lua_newuserdata(L, sizeof(l_easy_private));
   luaL_getmetatable(L, LUACURL_EASYMETATABLE);
-  lua_setmetatable(L, -2);
+  lua_setmetatable(L, - 2);
 
   if ((privp->curl = curl_easy_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
@@ -90,42 +94,32 @@ int l_easy_init(lua_State *L) {
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
 
-  /* setup write callback function only if entry exists in callback-table */
-  lua_getfield(L, 1, "writefunction");
-
-  if (lua_isfunction(L, -1))
-    l_easy_setup_writefunction(L, privp->curl);
-  lua_pop(L, 1);
+/*   /\* setup write callback function only if entry exists in callback-table *\/ */
+/*   lua_getfield(L, 1, "writefunction"); */
+/*   if (lua_isfunction(L, -1)) */
+/*     l_easy_setup_writefunction(L, privp->curl); */
+/*   lua_pop(L, 1); */
   
-  /* setup header callback function only if entry exists in callback-table */  
-  lua_getfield(L, 1, "headerfunction");
-
-  if (lua_isfunction(L, -1)) 
-    l_easy_setup_headerfunction(L, privp->curl);
-  lua_pop(L, 1);
+/*   /\* setup header callback function only if entry exists in callback-table *\/   */
+/*   lua_getfield(L, 1, "headerfunction"); */
+/*   if (lua_isfunction(L, -1))  */
+/*     l_easy_setup_headerfunction(L, privp->curl); */
+/*   lua_pop(L, 1); */
 
   /* set table of callback functions  as environment for userdata*/
-  lua_pushvalue(L, 1);		
-  lua_setfenv(L, -2);
+/*   lua_pushvalue(L, 1);		 */
+/*   lua_setfenv(L, -2); */
 
-  /* easy table */
-  lua_newtable(L);
+/*     /\* create the setopt table *\/ */
+/*   l_easy_setopt_newtable(L, privp); */
+/*   /\* and assign to easy table *\/ */
+/*   lua_setfield(L, -2, "setopt");   */
 
-  /* Use userdata as upvalue 1 */
-  lua_pushvalue(L, -2);
-  luaI_openlib (L, NULL, luacurl_easy_c, 1);
 
-    /* create the setopt table */
-  l_easy_setopt_newtable(L, privp);
-  /* and assign to easy table */
-  lua_setfield(L, -2, "setopt");  
 
-  /* create the getinfo subtable */
-  l_easy_getinfo_newtable(L, privp);
-  /* and assign to the easy table */
-  lua_setfield(L, -2, "getinfo");  
-
-  /* return easy table */
+  /* return userdata; */
+  stackDump(L);
+  lua_remove(L, 1);
   return 1;			
 }
 
@@ -142,7 +136,8 @@ int l_getdate(lua_State *L) {
 int l_easy_unescape(lua_State *L) {
   size_t inlength = 0;
   int outlength;
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
   const char *url = luaL_checklstring(L, 1, &inlength);
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
@@ -300,7 +295,7 @@ int l_version_info (lua_State *L) {
 
 int l_easy_gc(lua_State *L) {
   /* gc resources optained by cURL userdata */
-  l_private *privp = lua_touserdata(L, 1);
+  l_easy_private *privp = lua_touserdata(L, 1);
   curl_easy_cleanup(privp->curl);
   return 0;
 }
@@ -308,12 +303,22 @@ int l_easy_gc(lua_State *L) {
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
-  luaL_newmetatable(L, LUACURL_MULTIMETATABLE);  
-
+  
   /* register in easymetatable */
-  luaL_register(L, NULL, luacurl_m);  
+  luaL_register(L, NULL, luacurl_easy_m);  
 
+  /* easymetatable.__index = easymetatable */
+  lua_pushvalue(L, -1);
+  lua_setfield(L, -2, "__index");
+  stackDump(L);
+  /* register getinfo closures  */
+  l_easy_getinfo_register(L);
+  /* register setopt closures  */
+  l_easy_setopt_register(L);  
+
+  luaL_newmetatable(L, LUACURL_MULTIMETATABLE);  
   luaL_register(L, "cURL", luacurl_f);
+
   return 1;
 }
 

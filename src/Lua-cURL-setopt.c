@@ -24,23 +24,27 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
+#define P "setopt_"
+
 static int l_easy_setopt_long(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
   CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);
   long value = luaL_checklong(L,1);
 
   if (curl_easy_setopt(curl, *optionp, value) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   return 0;
 }
 
 static int l_easy_setopt_string(lua_State *L) {
-  CURL *curl = LUACURL_PRIVATEP_UPVALUE(L, 1)->curl;
-  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);  
-  const char *value = luaL_checkstring(L, 1);
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
+  const char *value = luaL_checkstring(L, 2);
 
   if (curl_easy_setopt(curl, *optionp, value) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   return 0;
 }
 
@@ -51,35 +55,31 @@ static struct {
   lua_CFunction func;
 } luacurl_setopt_c[] = {
   /* behavior options */
-  {"verbose", CURLOPT_VERBOSE, l_easy_setopt_long},
-  {"header", CURLOPT_HEADER, l_easy_setopt_long},
-  {"noprogrss", CURLOPT_NOPROGRESS, l_easy_setopt_long},
-  {"nosignal", CURLOPT_NOSIGNAL, l_easy_setopt_long},
+  {P"verbose", CURLOPT_VERBOSE, l_easy_setopt_long},
+  {P"header", CURLOPT_HEADER, l_easy_setopt_long},
+  {P"noprogrss", CURLOPT_NOPROGRESS, l_easy_setopt_long},
+  {P"nosignal", CURLOPT_NOSIGNAL, l_easy_setopt_long},
   /* callback options */
   /* implemented differently */
   /* network options */
-  {"url", CURLOPT_URL, l_easy_setopt_string},
+  {P"url", CURLOPT_URL, l_easy_setopt_string},
 
-  {"ssl_verifypeer", CURLOPT_SSL_VERIFYPEER, l_easy_setopt_long},
+  {P"ssl_verifypeer", CURLOPT_SSL_VERIFYPEER, l_easy_setopt_long},
   /* dummy opt value */
   {NULL, CURLOPT_VERBOSE, NULL}};	
 
-/* create setopt subtable */
-int l_easy_setopt_newtable(lua_State *L, l_private *privp) {
+int l_easy_setopt_register(lua_State *L) {
   int i;
 
-  lua_newtable(L);		
-  /* assign setopt closures to setopt subtable */
+  /* register setopt closures */
   for (i=0; luacurl_setopt_c[i].name != NULL; i++) {
     CURLoption *optionp = &(luacurl_setopt_c[i].option);
-    lua_pushlightuserdata(L, privp); 
     lua_pushlightuserdata(L, optionp);
-    lua_pushcclosure(L, luacurl_setopt_c[i].func, 2);
+    lua_pushcclosure(L, luacurl_setopt_c[i].func, 1);
     lua_setfield(L, -2, luacurl_setopt_c[i].name);
   }
 
-  /* setopt table is on top of the stack */
-  return 1;
+  return 0;
 }
 
 

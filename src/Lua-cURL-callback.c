@@ -26,6 +26,8 @@
 
 static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stream) {
   lua_State* L = (lua_State*)stream;
+
+  printf("In Callback\n");
   lua_getfenv(L, lua_upvalueindex(1));
   lua_getfield(L, -1, "writefunction");
   lua_pushlstring(L, (char*) ptr, nmemb * size);
@@ -46,8 +48,7 @@ static int l_easy_headerfunction(void *ptr, size_t size, size_t nmemb, void *str
 
 
 int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
-  
-  /* Lua State as userdata argument */
+    /* Lua State as userdata argument */
   if (curl_easy_setopt(curl, CURLOPT_WRITEDATA ,L) != CURLE_OK)
     luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
 
