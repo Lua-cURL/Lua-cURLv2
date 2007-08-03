@@ -70,28 +70,39 @@ int l_easy_escape(lua_State *L) {
 int l_easy_perform(lua_State *L) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
+  /* do writecallback? */
+  int writefunction;
+  /* do headercallback */
+  int headerfunction;
+
   /* check optional callback table */
   luaL_opt(L, luaL_checktable, 2, lua_newtable(L));
   
   /* setup write callback function only if entry exists in callback-table */
   lua_getfield(L, 2, "writefunction");
-  if (lua_isfunction(L, -1)) 
+  writefunction =  lua_isfunction(L, -1)?1:0;
+  if (writefunction) 
     l_easy_setup_writefunction(L, privatep->curl);
   lua_pop(L, 1);
 
   /* setup header callback function only if entry exists in callback-table */
   lua_getfield(L, 2, "headerfunction");
-  if (lua_isfunction(L, -1))
+  headerfunction = lua_isfunction(L, -1)?1:0;
+  if (headerfunction)
     l_easy_setup_headerfunction(L, privatep->curl);
   lua_pop(L, 1);
-
+  
 
   /* callback table is on top on stack */
-  stackDump(L);
   if (curl_easy_perform(curl) != CURLE_OK) 
     luaL_error(L, "%s", privatep->error);
+  
+  /* unset callback functions */
+  if (headerfunction) 
+    l_easy_clear_headerfunction(L, privatep->curl);
+  if (writefunction) 
+    l_easy_clear_writefunction(L, privatep->curl);
 
-  /* TODO unset callback functions */
   return 0;
 }
 
@@ -109,19 +120,6 @@ int l_easy_init(lua_State *L) {
   /* set error buffer */
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
-
- 
-
-  /* set table of callback functions  as environment for userdata*/
-/*   lua_pushvalue(L, 1);		 */
-/*   lua_setfenv(L, -2); */
-
-/*     /\* create the setopt table *\/ */
-/*   l_easy_setopt_newtable(L, privp); */
-/*   /\* and assign to easy table *\/ */
-/*   lua_setfield(L, -2, "setopt");   */
-
-
 
   /* return userdata; */
   return 1;			

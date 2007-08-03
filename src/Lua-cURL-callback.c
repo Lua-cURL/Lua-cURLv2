@@ -44,20 +44,38 @@ static int l_easy_headerfunction(void *ptr, size_t size, size_t nmemb, void *str
 
 int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
     /* Lua State as userdata argument */
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   if (curl_easy_setopt(curl, CURLOPT_WRITEDATA ,L) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, l_easy_writefunction) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
   return 0;
 }
 
 int l_easy_setup_headerfunction(lua_State *L, CURL* curl) {
   /* Lua State as userdata argument */
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   if (curl_easy_setopt(curl, CURLOPT_WRITEHEADER ,L) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
 
   if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, l_easy_headerfunction) != CURLE_OK)
-    luaL_error(L, "%s", LUACURL_PRIVATEP_UPVALUE(L, 1)->error);
+    luaL_error(L, "%s", privatep->error);
+  return 0;
+}
+
+int l_easy_clear_headerfunction(lua_State *L, CURL* curl) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  printf("Unsetting header\n");
+  if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);
+  return 0;
+}
+
+int l_easy_clear_writefunction(lua_State *L, CURL* curl) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  printf("Unsetting write\n");
+  if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);
   return 0;
 }
 
