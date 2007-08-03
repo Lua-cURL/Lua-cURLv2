@@ -39,7 +39,6 @@
 
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
-#define LUACURL_PRIVATEP_UPVALUE(L, INDEX) ((l_easy_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_PRIVATE_MULTIP_UPVALUE(L, INDEX) ((l_multi_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_OPTIONP_UPVALUE(L, INDEX) ((CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_INFOP_UPVALUE(L, INDEX) ((CURLINFO *) lua_touserdata(L, lua_upvalueindex(INDEX)))

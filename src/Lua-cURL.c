@@ -35,7 +35,6 @@ static const struct luaL_Reg luacurl_easy_m[] = {
   {"post", l_easy_post},
   {"__gc", l_easy_gc},
   /* not for public use */
-  {"userdata", l_easy_userdata},
   {NULL, NULL}};
 
 
@@ -144,11 +143,6 @@ int l_easy_unescape(lua_State *L) {
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
   curl_free(rurl);
-  return 1;
-}
-
-int l_easy_userdata (lua_State *L) {
-  lua_pushvalue(L, lua_upvalueindex(1));
   return 1;
 }
 
