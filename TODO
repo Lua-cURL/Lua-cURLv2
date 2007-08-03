@@ -1,1 +1,5 @@
 Code-cleanup: Cleanup version.info
+Check arguments to: lua_multi_init
+splitup: easy/mutli sourcecode
+multi: garbagecollect callbackdata
+
