@@ -37,6 +37,12 @@ static const struct luaL_Reg luacurl_easy_m[] = {
   /* not for public use */
   {NULL, NULL}};
 
+/* methods assigned to multi table */
+static const struct luaL_Reg luacurl_multi_m[] = {
+  {"add_handle", l_multi_add_handle},
+  {"perform", l_multi_perform},
+  {"__gc", l_multi_gc},
+  {NULL, NULL}};
 
 
 /* global functions in module namespace*/
@@ -312,6 +318,11 @@ int luaopen_cURL(lua_State *L) {
   l_easy_setopt_register(L);  
 
   luaL_newmetatable(L, LUACURL_MULTIMETATABLE);  
+  luaL_register(L, NULL, luacurl_multi_m);  
+    /* multemetatable.__index = multimetatable */
+  lua_pushvalue(L, -1);
+  lua_setfield(L, -2, "__index");
+
   luaL_register(L, "cURL", luacurl_f);
 
   return 1;

@@ -24,11 +24,6 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-/* closures assigned to multi table */
-static const struct luaL_Reg luacurl_multi_c[] = {
-  {"add_handle", l_multi_add_handle},
-  {"perform", l_multi_perform},
-  {NULL, NULL}};
 
 int l_multi_init(lua_State *L) {
   l_multi_private *privp;
@@ -40,34 +35,20 @@ int l_multi_init(lua_State *L) {
 
   if ((privp->curlm = curl_multi_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
-  
-  /* multi table */
-  lua_newtable(L);  
 
-  /* Use userdata as upvalue 1 */
-  lua_pushvalue(L, -2);
-  /* Use reference to  easy userdata as Upvalue 2 */
-  lua_getfield(L, 1, "userdata");
-  lua_call(L, 0, 1);
-  luaL_checkudata(L, -1, LUACURL_EASYMETATABLE);
-  luaI_openlib (L, NULL, luacurl_multi_c, 2);
-
-  /* return multi table */
+  /* return userdata */
   return 1;			
 }
 
 int l_multi_add_handle (lua_State *L) {
-  luaL_checkudata(L, lua_upvalueindex(1), LUACURL_MULTIMETATABLE);
-  CURLM *curlm = LUACURL_PRIVATE_MULTIP_UPVALUE(L, 1)->curlm;
-  l_easy_private* privatep;
+  l_multi_private *privatep = luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
+  CURLM *curlm = privatep->curlm;
   CURLMcode rc;
 
   /* get easy userdata */
-  lua_getfield(L, 1, "userdata");
-  lua_call(L, 0, 1);
-  privatep = luaL_checkudata(L, -1, LUACURL_EASYMETATABLE);
+  l_easy_private *easyp = luaL_checkudata(L, 2, LUACURL_EASYMETATABLE);
 
-  if ((rc = curl_multi_add_handle(curlm, privatep->curl)) != CURLM_OK)
+  if ((rc = curl_multi_add_handle(curlm, easyp->curl)) != CURLM_OK)
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
 
   return 0;
@@ -89,4 +70,9 @@ int l_multi_perform (lua_State *L) {
   
   lua_pushinteger(L, value);
   return 1;
+}
+
+int l_multi_gc (lua_State *L) {
+  printf("Not implemented\n");
+  return 0;
 }

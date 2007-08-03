@@ -71,6 +71,7 @@ int l_easy_post(lua_State *L);
 int l_multi_init (lua_State *L);
 int l_multi_add_handle (lua_State *L);
 int l_multi_perform (lua_State *L);
+int l_multi_gc (lua_State *L);
 /* subtable creation */
 int l_easy_getinfo_register (lua_State *L);
 int l_easy_setopt_register (lua_State *L);
