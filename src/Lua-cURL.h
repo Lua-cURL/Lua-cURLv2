@@ -35,6 +35,7 @@
 /* custom metatables */
 #define LUACURL_EASYMETATABLE "CURL.easy"
 #define LUACURL_MULTIMETATABLE "CURL.multi"
+#define LUACURL_REGISTRYPREFIX "Lua-cURL_private"
 
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)

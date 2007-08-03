@@ -70,18 +70,29 @@ int l_easy_escape(lua_State *L) {
 int l_easy_perform(lua_State *L) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
+  /* check optional callback table */
+  luaL_opt(L, luaL_checktable, 2, lua_newtable(L));
   
+  /* setup write callback function only if entry exists in callback-table */
+  lua_getfield(L, 2, "writefunction");
+  if (lua_isfunction(L, -1)) {
+    printf("Setting handlers\n");
+    l_easy_setup_writefunction(L, privatep->curl);
+  }
+  lua_pop(L, 1);
+
+  /* callback table is on top on stack */
+  stackDump(L);
   if (curl_easy_perform(curl) != CURLE_OK) 
     luaL_error(L, "%s", privatep->error);
+
+  /* TODO unset callback functions */
   return 0;
 }
 
 int l_easy_init(lua_State *L) {
   l_easy_private *privp;
   
-  /* check optional callback table */
-  luaL_opt(L, luaL_checktable, 1, lua_newtable(L));
-
   /* create userdata and assign metatable */
   privp = (l_easy_private *) lua_newuserdata(L, sizeof(l_easy_private));
   luaL_getmetatable(L, LUACURL_EASYMETATABLE);
@@ -94,12 +105,7 @@ int l_easy_init(lua_State *L) {
   if (curl_easy_setopt(privp->curl, CURLOPT_ERRORBUFFER, privp->error) != CURLE_OK)
     return luaL_error(L, "cannot set error buffer");
 
-/*   /\* setup write callback function only if entry exists in callback-table *\/ */
-/*   lua_getfield(L, 1, "writefunction"); */
-/*   if (lua_isfunction(L, -1)) */
-/*     l_easy_setup_writefunction(L, privp->curl); */
-/*   lua_pop(L, 1); */
-  
+ 
 /*   /\* setup header callback function only if entry exists in callback-table *\/   */
 /*   lua_getfield(L, 1, "headerfunction"); */
 /*   if (lua_isfunction(L, -1))  */
@@ -118,8 +124,6 @@ int l_easy_init(lua_State *L) {
 
 
   /* return userdata; */
-  stackDump(L);
-  lua_remove(L, 1);
   return 1;			
 }
 
@@ -310,7 +314,6 @@ int luaopen_cURL(lua_State *L) {
   /* easymetatable.__index = easymetatable */
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
-  stackDump(L);
   /* register getinfo closures  */
   l_easy_getinfo_register(L);
   /* register setopt closures  */
