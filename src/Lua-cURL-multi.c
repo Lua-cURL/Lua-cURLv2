@@ -46,6 +46,7 @@ typedef struct l_multi_callbackdata {
 typedef struct l_multi_private {
   CURLM *curlm;
   int last_remain;			/* remaining easy sockets */
+  int n_easy;				/* number of easy handles */
 } l_multi_private;
 
 
@@ -58,6 +59,7 @@ int l_multi_init(lua_State *L) {
   luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
   lua_setmetatable(L, -2);
 
+  privp->n_easy = 0;
   privp->last_remain = 1;		/* dummy: not null */
   if ((privp->curlm = curl_multi_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
@@ -128,6 +130,7 @@ int l_multi_add_handle (lua_State *L) {
   if ((rc = curl_multi_add_handle(curlm, easyp->curl)) != CURLM_OK)
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
   
+  privatep->n_easy++;
   data_callbackdata = l_multi_create_callbackdata(L, "data", easyp);
   /* setup internal callback */
   if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEDATA , data_callbackdata) != CURLE_OK)
@@ -215,5 +218,7 @@ int l_multi_perform (lua_State *L) {
 }
 
 int l_multi_gc (lua_State *L) {
+  l_multi_private *privatep = luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
+  printf("Have to cleanup easyhandles: %d\n", privatep->n_easy);
   return 0;
 }
