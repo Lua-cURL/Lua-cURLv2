@@ -2,6 +2,4 @@ Code-cleanup: Cleanup version.info
 Check arguments to: lua_multi_init
 splitup: easy/mutli sourcecode
 multi: garbagecollect callbackdata
-       todo: concat, strings are now replaced
-       todo: no busywaiting: use select()
        
