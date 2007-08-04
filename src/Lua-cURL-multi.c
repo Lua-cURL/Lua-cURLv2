@@ -21,8 +21,25 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+#include <stdlib.h>		/* malloc */
+
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
+
+/* REGISTRYINDEX[MULTIREGISTRY_KEY][easyk] = {
+   	name = REALDATA
+   }
+ */
+typedef struct l_multi_callbackdata {
+  lua_State* L;
+  l_easy_private *easyp;		/* corresponding easy handler */
+  char *name;			/* type: header/write */
+} l_multi_callbackdata;
+
+typedef struct l_multi_private {
+  CURLM *curlm;
+  int last_remain;			/* remaining easy sockets */
+} l_multi_private;
 
 
 int l_multi_init(lua_State *L) {
@@ -30,9 +47,11 @@ int l_multi_init(lua_State *L) {
   
   /* create userdata and assign metatable */
   privp = (l_multi_private *) lua_newuserdata(L, sizeof(l_multi_private));
+  
   luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
   lua_setmetatable(L, -2);
 
+  privp->last_remain = 1;		/* dummy: not null */
   if ((privp->curlm = curl_multi_init()) == NULL)
     return luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
@@ -41,64 +60,119 @@ int l_multi_init(lua_State *L) {
 }
 
 static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *stream) {
-  lua_State* L = (lua_State*)stream;
-  printf("InternalCallback\n");
-  lua_pushlstring(L, ptr, nmemb*size);
-  stackDump(L);
+  l_multi_callbackdata *callbackdata = (l_multi_callbackdata*) stream;
+  /* append data */
+  lua_State *L = callbackdata->L;
+
+  /* table.insert(myregistrytable, {callbackdata}) */
+  lua_getglobal(L, "table"); 
+  lua_getfield(L, -1, "insert");
+  /* remove table reference */
+  lua_remove(L, -2);		
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+
+  /* create new table containing callbackdata */
+  lua_newtable(L);		
+  /* insert table entries */
+  lua_pushstring(L, callbackdata->name);
+  lua_rawseti(L, -2, 1); 	/* insert callback name */
+
+  lua_pushlstring(L, ptr, size * nmemb);
+  lua_rawseti(L, -2, 2); 	/* insert callback data */
+
+  lua_call(L, 2, 0);
   return nmemb*size;
 }
 
+l_multi_callbackdata* l_multi_create_callbackdata(lua_State *L, char *name, l_easy_private *easyp) {
+  l_multi_callbackdata *callbackdata;
+
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
+  
+  lua_newtable(L);		/* table containing callback-data easyhandle  */
+  lua_rawseti(L, -2, (int) easyp);
+
+  /* TODO: sanity check */
+  /*   luaL_error(L, "callbackdata exists: %d, %s", easyp, name); */
+  
+  /* shrug! we need to garbage-collect this */
+  callbackdata = (l_multi_callbackdata*) malloc(sizeof(l_multi_callbackdata));
+  if (callbackdata == NULL)
+    luaL_error(L, "can't malloc callbackdata");
+  
+  /* initialize */
+  callbackdata->L = L;
+  callbackdata->name = name;
+  callbackdata->easyp = easyp;
+
+  /* add to list of callbackdata */
+  printf("Added to list off callbackdata");
+  return callbackdata;
+}
 
 int l_multi_add_handle (lua_State *L) {
   l_multi_private *privatep = luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
   CURLM *curlm = privatep->curlm;
   CURLMcode rc;
+  l_multi_callbackdata *data_callbackdata, *header_callbackdata;
 
   /* get easy userdata */
   l_easy_private *easyp = luaL_checkudata(L, 2, LUACURL_EASYMETATABLE);
 
   if ((rc = curl_multi_add_handle(curlm, easyp->curl)) != CURLM_OK)
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
+  
+  data_callbackdata = l_multi_create_callbackdata(L, "data", easyp);
+  /* setup internal callback */
+  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEDATA , data_callbackdata) != CURLE_OK)
+    luaL_error(L, "%s", easyp->error);
+  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEFUNCTION, l_multi_internalcallback) != CURLE_OK)
+    luaL_error(L, "%s", easyp->error);
 
-  /* settup internal callback */
-  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEDATA ,L) != CURLE_OK)
+  /* shrug! we need to garbage-collect this */
+  header_callbackdata = l_multi_create_callbackdata(L, "header", easyp);
+  if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEHEADER , header_callbackdata) != CURLE_OK)
     luaL_error(L, "%s", easyp->error);
   if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEFUNCTION, l_multi_internalcallback) != CURLE_OK)
     luaL_error(L, "%s", easyp->error);
   return 0;
 }
 
+/* try to get data from internall callbackbuffer */
+static int l_multi_perform_ingernal_getfrombuffer(lua_State *L) {
+  /* table.remove(myregistrytable, 1) */
+  lua_getglobal(L, "table");
+  lua_getfield(L, -1, "remove");
+  /* remove table reference */
+  lua_remove(L, -2);		
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
+  lua_pushinteger(L, 1);
+  lua_call(L, 2, 1);
+  return 1;
+}
+
 static int l_multi_perform_internal (lua_State *L) {
   l_multi_private *privatep = LUACURL_PRIVATE_MULTIP_UPVALUE(L, 1);
   CURLM *curlm = privatep->curlm;
   CURLMcode rc;
-  int remain = 1;
+  int remain;
 
-  int prev_top = lua_gettop(L);
-  int current_top;
-  /* need to read more data */
-  while (remain) {
-    rc = curl_multi_perform(curlm, &remain);
-    switch (rc) {
-    case CURLM_CALL_MULTI_PERFORM:
-      break;
-    case CURLM_OK:
-      current_top = lua_gettop(L);
-      if ( current_top > prev_top) { 
-	lua_concat(L, current_top - prev_top);
-	/* return strings from callbacks */
-	return 1;
-      }
-      break;
-    default:
+  l_multi_perform_ingernal_getfrombuffer(L);
+  /* no data in buffer: try another perform */
+  while (lua_isnil(L, -1)) {	
+    lua_pop(L, -1);
+    if (privatep->last_remain == 0) 
+      return 0;			/* returns nil*/
+    while ((rc = curl_multi_perform(curlm, &remain)) == CURLM_CALL_MULTI_PERFORM); /* loop */
+    if (rc != CURLM_OK)
       luaL_error(L, "cannot perform: %s", curl_multi_strerror(rc));
-    }
+    printf("remain: %d:\n", remain);
+    privatep->last_remain = remain;
+    /* got data */
+    l_multi_perform_ingernal_getfrombuffer(L);
   }
-
-  /* no more data */
-  return 0;			/* nil */
+  return 1;
 }
-
 /* return closure */
 int l_multi_perform (lua_State *L) {
   luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  

@@ -37,6 +37,8 @@
 #define LUACURL_MULTIMETATABLE "CURL.multi"
 #define LUACURL_REGISTRYPREFIX "Lua-cURL_private"
 
+#define MULTIREGISTRY_KEY "_LUA_CURL"
+
 /* custom macros */
 #define LUACURL_CHECKEASY(L) (CURL *) luaL_checkudata(L, 1, LUACURL_EASYMETATABLE)
 #define LUACURL_PRIVATE_MULTIP_UPVALUE(L, INDEX) ((l_multi_private *) lua_touserdata(L, lua_upvalueindex(INDEX)))
@@ -47,10 +49,6 @@ typedef struct l_easy_private {
   CURL *curl; 
   char error[CURL_ERROR_SIZE];
 } l_easy_private;
-
-typedef struct l_multi_private {
-  CURLM *curlm;
-} l_multi_private;
 
 /* Lua closures (CURL* upvalue) */
 int l_tostring (lua_State *L);
