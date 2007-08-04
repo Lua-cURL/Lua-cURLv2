@@ -11,6 +11,8 @@ c2:setopt_url("http://www.hoetzel.info/")
 m = cURL.multi_init()
 m:add_handle(c)
 m:add_handle(c2)
-it = m:perform()
+-- it = m:perform()
 
-for str in m:perform() do print(str) end
+for data,type,easy in m:perform() do 
+   if (type == "data") then print(data) end
+end

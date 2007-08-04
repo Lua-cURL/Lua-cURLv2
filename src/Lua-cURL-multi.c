@@ -29,10 +29,14 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-/* REGISTRYINDEX[MULTIREGISTRY_KEY][easyk] = {
-   	name = REALDATA
+/* REGISTRYINDEX[MULTIREGISTRY_KEY] = {
+   { 1=type, 2=data, 3=EASY_HANDLE
+   } 
+   { 1=type, 2=data, 3=EASY_HANDLE
    }
+}
  */
+
 typedef struct l_multi_callbackdata {
   lua_State* L;
   l_easy_private *easyp;		/* corresponding easy handler */
@@ -77,12 +81,11 @@ static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *
   /* create new table containing callbackdata */
   lua_newtable(L);		
   /* insert table entries */
-  lua_pushstring(L, callbackdata->name);
-  lua_rawseti(L, -2, 1); 	/* insert callback name */
-
   lua_pushlstring(L, ptr, size * nmemb);
-  lua_rawseti(L, -2, 2); 	/* insert callback data */
-
+  lua_rawseti(L, -2 , 1);	
+  lua_pushstring(L, callbackdata->name);
+  lua_rawseti(L, -2 , 2);
+  
   lua_call(L, 2, 0);
   return nmemb*size;
 }
@@ -159,6 +162,7 @@ static int l_multi_perform_internal (lua_State *L) {
   CURLM *curlm = privatep->curlm;
   CURLMcode rc;
   int remain;
+  int n;
 
   l_multi_perform_ingernal_getfrombuffer(L);
   /* no data in buffer: try another perform */
@@ -170,7 +174,6 @@ static int l_multi_perform_internal (lua_State *L) {
    while ((rc = curl_multi_perform(curlm, &remain)) == CURLM_CALL_MULTI_PERFORM); /* loop */
     if (rc != CURLM_OK)
       luaL_error(L, "cannot perform: %s", curl_multi_strerror(rc));
-    printf("remain: %d:\n", remain);
     privatep->last_remain = remain;
 
     /* got data ? */
@@ -181,7 +184,6 @@ static int l_multi_perform_internal (lua_State *L) {
       fd_set fdwrite;
       fd_set fdexcep;
       int maxfd;
-      int n;
 
       FD_ZERO(&fdread);
       FD_ZERO(&fdwrite);
@@ -197,7 +199,13 @@ static int l_multi_perform_internal (lua_State *L) {
 	printf("Number of fds :%d\n", n);
     }
   }
-  return 1;
+  /* unpack table */
+  
+  n = lua_gettop(L);
+  lua_rawgeti(L, n, 1);		/* data */
+  lua_rawgeti(L, n, 2);		/* type */
+  lua_remove(L, n);
+  return 2;
 }
 /* return closure */
 int l_multi_perform (lua_State *L) {
@@ -207,6 +215,5 @@ int l_multi_perform (lua_State *L) {
 }
 
 int l_multi_gc (lua_State *L) {
-  printf("Not implemented\n");
   return 0;
 }
