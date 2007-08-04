@@ -22,6 +22,9 @@
 ******************************************************************************/
 
 #include <stdlib.h>		/* malloc */
+#include <sys/select.h>		/* select */
+#include <string.h>		/* strerror */
+#include <errno.h>
 
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
@@ -163,13 +166,36 @@ static int l_multi_perform_internal (lua_State *L) {
     lua_pop(L, -1);
     if (privatep->last_remain == 0) 
       return 0;			/* returns nil*/
-    while ((rc = curl_multi_perform(curlm, &remain)) == CURLM_CALL_MULTI_PERFORM); /* loop */
+
+   while ((rc = curl_multi_perform(curlm, &remain)) == CURLM_CALL_MULTI_PERFORM); /* loop */
     if (rc != CURLM_OK)
       luaL_error(L, "cannot perform: %s", curl_multi_strerror(rc));
     printf("remain: %d:\n", remain);
     privatep->last_remain = remain;
-    /* got data */
+
+    /* got data ? */
     l_multi_perform_ingernal_getfrombuffer(L);
+    /* block for more data */
+    if (lua_isnil(L, -1) && remain) {
+      fd_set fdread;
+      fd_set fdwrite;
+      fd_set fdexcep;
+      int maxfd;
+      int n;
+
+      FD_ZERO(&fdread);
+      FD_ZERO(&fdwrite);
+      FD_ZERO(&fdexcep);
+      
+      if ((rc = curl_multi_fdset(curlm, &fdread, &fdwrite, &fdexcep, &maxfd)) != CURLM_OK)
+	luaL_error(L, "curl_multi_fdset: %s", curl_multi_strerror(rc));
+      
+      
+      if ((n = select(maxfd+1, &fdread, &fdwrite, &fdexcep, NULL)) < 0)
+	luaL_error(L, "select: %s", strerror(errno));
+      else 
+	printf("Number of fds :%d\n", n);
+    }
   }
   return 1;
 }
