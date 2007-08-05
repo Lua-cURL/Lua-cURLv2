@@ -55,29 +55,29 @@ typedef struct l_multi_callbackdata {
 #define LUACURL_PRIVATE_MULTIP_UPVALUE(L, INDEX) ((l_multi_userdata *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 
 static l_multi_userdata* l_multi_newuserdata(lua_State *L) { 
-  l_multi_userdata *privp = (l_multi_userdata *) lua_newuserdata(L, sizeof(l_multi_userdata));
-  int size =  snprintf(privp->key, 0, "%s%p", MULTIREGISTRY_KEY, privp) + 1;
-  privp->n_easy = 0;
-  privp->last_remain = 1;		/* dummy: not null */
-  if ((privp->key = malloc(size)) == NULL)
+  l_multi_userdata *multi_userdata = (l_multi_userdata *) lua_newuserdata(L, sizeof(l_multi_userdata));
+  int size =  snprintf(multi_userdata->key, 0, "%s%p", MULTIREGISTRY_KEY, multi_userdata) + 1;
+  multi_userdata->n_easy = 0;
+  multi_userdata->last_remain = 1;		/* dummy: not null */
+  if ((multi_userdata->key = malloc(size)) == NULL)
     luaL_error(L, "cannot malloc multuserdata");
-  snprintf(privp->key, size, "%s%p", MULTIREGISTRY_KEY, privp);
-  return privp;
+  snprintf(multi_userdata->key, size, "%s%p", MULTIREGISTRY_KEY, multi_userdata);
+  return multi_userdata;
 }
 
 
 int l_multi_init(lua_State *L) {
   
-  l_multi_userdata *privp = l_multi_newuserdata(L);
+  l_multi_userdata *multi_userdata = l_multi_newuserdata(L);
   luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
   lua_setmetatable(L, -2);
 
-  if ((privp->curlm = curl_multi_init()) == NULL)
+  if ((multi_userdata->curlm = curl_multi_init()) == NULL)
     luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
   /* creaty uniqe table in registry to store state for callback functions */
   lua_newtable(L);
-  lua_setfield(L, LUA_REGISTRYINDEX, privp->key);
+  lua_setfield(L, LUA_REGISTRYINDEX, multi_userdata->key);
   /* return userdata */
   return 1;			
 }
