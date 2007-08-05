@@ -100,10 +100,23 @@ static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *
   /* create new table containing callbackdata */
   lua_newtable(L);		
   /* insert table entries */
+  /* data */
   lua_pushlstring(L, ptr, size * nmemb);
   lua_rawseti(L, -2 , 1);	
+  /* type */
   lua_pushstring(L, callbackdata->name);
   lua_rawseti(L, -2 , 2);
+
+  /* get corresponding easyuserdata */
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  lua_pushlightuserdata(L, callbackdata->multip);
+  lua_gettable(L, -2);
+  /* remove registry table */
+  lua_remove(L, -2);
+  lua_pushlightuserdata(L, callbackdata->easyp);
+  lua_gettable(L, -2);
+  lua_remove(L, - 2);
+  lua_rawseti(L, -2 , 3);  
   
   lua_call(L, 2, 0);
   return nmemb*size;
@@ -141,6 +154,18 @@ int l_multi_add_handle (lua_State *L) {
   if ((rc = curl_multi_add_handle(curlm, easyp->curl)) != CURLM_OK)
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
   
+  /* Add To registry  */
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  lua_pushlightuserdata(L, privatep);
+  lua_gettable(L, -2);
+  /* remove registry table */
+  lua_remove(L, -2);
+  lua_pushlightuserdata(L, easyp);
+  lua_pushvalue(L, 2);
+  lua_settable(L, -3);
+  /* remove multiregistry table from stack */
+  lua_pop(L, 1);		
+
   privatep->n_easy++;
   data_callbackdata = l_multi_create_callbackdata(L, "data", easyp, privatep);
   /* setup internal callback */
@@ -223,8 +248,9 @@ static int l_multi_perform_internal (lua_State *L) {
   n = lua_gettop(L);
   lua_rawgeti(L, n, 1);		/* data */
   lua_rawgeti(L, n, 2);		/* type */
+  lua_rawgeti(L, n, 3);		/* easy */
   lua_remove(L, n);
-  return 2;
+  return 3;
 }
 /* return closure */
 int l_multi_perform (lua_State *L) {
