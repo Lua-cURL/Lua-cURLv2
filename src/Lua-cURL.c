@@ -329,11 +329,6 @@ int luaopen_cURL(lua_State *L) {
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
 
-  /* creaty uniqe table in registry to store state for callback functions */
-  stackDump(L);
-  lua_newtable(L);
-  lua_setfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
-
   /* return module functions */
   luaL_register(L, "cURL", luacurl_f);
   return 1;

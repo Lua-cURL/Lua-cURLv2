@@ -29,7 +29,7 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-/* REGISTRYINDEX[MULTIREGISTRY_KEY] = {
+/* REGISTRYINDEX[MULTIREGISTRY_KEY..MULTIPOINTER] = {
    { 1=type, 2=data, 3=EASY_HANDLE
    } 
    { 1=type, 2=data, 3=EASY_HANDLE
@@ -37,33 +37,47 @@
 }
  */
 
-typedef struct l_multi_callbackdata {
-  lua_State* L;
-  l_easy_private *easyp;		/* corresponding easy handler */
-  char *name;			/* type: header/write */
-} l_multi_callbackdata;
-
 typedef struct l_multi_private {
   CURLM *curlm;
+  char *key;				/* registry key */
   int last_remain;			/* remaining easy sockets */
   int n_easy;				/* number of easy handles */
 } l_multi_private;
 
 
+typedef struct l_multi_callbackdata {
+  lua_State* L;
+  l_easy_private *easyp;		/* corresponding easy handler */
+  l_multi_private *multip;		/* corresponding easy handler */
+  char *name;			/* type: header/write */
+} l_multi_callbackdata;
+
+
+static l_multi_private* l_multi_newuserdata(lua_State *L) { 
+  l_multi_private *privp = (l_multi_private *) lua_newuserdata(L, sizeof(l_multi_private));
+  int size =  snprintf(privp->key, 0, "%s%p", MULTIREGISTRY_KEY, privp) + 1;
+  privp->n_easy = 0;
+  privp->last_remain = 1;		/* dummy: not null */
+  if ((privp->key = malloc(size)) == NULL)
+    luaL_error(L, "cannot malloc multuserdata");
+  snprintf(privp->key, size, "%s%p", MULTIREGISTRY_KEY, privp);
+  printf("Using key: %s\n", privp->key);
+  return privp;
+}
+
 int l_multi_init(lua_State *L) {
-  l_multi_private *privp;
   
-  /* create userdata and assign metatable */
-  privp = (l_multi_private *) lua_newuserdata(L, sizeof(l_multi_private));
-  
+  l_multi_private *privp = l_multi_newuserdata(L);
   luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
   lua_setmetatable(L, -2);
 
-  privp->n_easy = 0;
-  privp->last_remain = 1;		/* dummy: not null */
   if ((privp->curlm = curl_multi_init()) == NULL)
-    return luaL_error(L, "something went wrong and you cannot use the other curl functions");
+    luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
+  /* creaty uniqe table in registry to store state for callback functions */
+  lua_newtable(L);
+  lua_setfield(L, LUA_REGISTRYINDEX, privp->key);
+  stackDump(L);
   /* return userdata */
   return 1;			
 }
@@ -78,7 +92,8 @@ static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *
   lua_getfield(L, -1, "insert");
   /* remove table reference */
   lua_remove(L, -2);		
-  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  printf("Using key in callback: %s\n", callbackdata->multip->key);
+  lua_getfield(L, LUA_REGISTRYINDEX, callbackdata->multip->key); 
 
   /* create new table containing callbackdata */
   lua_newtable(L);		
@@ -92,13 +107,8 @@ static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *
   return nmemb*size;
 }
 
-l_multi_callbackdata* l_multi_create_callbackdata(lua_State *L, char *name, l_easy_private *easyp) {
+l_multi_callbackdata* l_multi_create_callbackdata(lua_State *L, char *name, l_easy_private *easyp, l_multi_private *multip) {
   l_multi_callbackdata *callbackdata;
-
-  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
-  
-  lua_newtable(L);		/* table containing callback-data easyhandle  */
-  lua_rawseti(L, -2, (int) easyp);
 
   /* TODO: sanity check */
   /*   luaL_error(L, "callbackdata exists: %d, %s", easyp, name); */
@@ -112,7 +122,7 @@ l_multi_callbackdata* l_multi_create_callbackdata(lua_State *L, char *name, l_ea
   callbackdata->L = L;
   callbackdata->name = name;
   callbackdata->easyp = easyp;
-
+  callbackdata->multip = multip;
   /* add to list of callbackdata */
   printf("Added to list off callbackdata");
   return callbackdata;
@@ -131,7 +141,7 @@ int l_multi_add_handle (lua_State *L) {
     luaL_error(L, "cannot add handle: %s", curl_multi_strerror(rc));
   
   privatep->n_easy++;
-  data_callbackdata = l_multi_create_callbackdata(L, "data", easyp);
+  data_callbackdata = l_multi_create_callbackdata(L, "data", easyp, privatep);
   /* setup internal callback */
   if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEDATA , data_callbackdata) != CURLE_OK)
     luaL_error(L, "%s", easyp->error);
@@ -139,7 +149,7 @@ int l_multi_add_handle (lua_State *L) {
     luaL_error(L, "%s", easyp->error);
 
   /* shrug! we need to garbage-collect this */
-  header_callbackdata = l_multi_create_callbackdata(L, "header", easyp);
+  header_callbackdata = l_multi_create_callbackdata(L, "header", easyp, privatep);
   if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEHEADER , header_callbackdata) != CURLE_OK)
     luaL_error(L, "%s", easyp->error);
   if (curl_easy_setopt(easyp->curl, CURLOPT_WRITEFUNCTION, l_multi_internalcallback) != CURLE_OK)
@@ -148,13 +158,13 @@ int l_multi_add_handle (lua_State *L) {
 }
 
 /* try to get data from internall callbackbuffer */
-static int l_multi_perform_ingernal_getfrombuffer(lua_State *L) {
+static int l_multi_perform_internal_getfrombuffer(lua_State *L, l_multi_private *privatep) {
   /* table.remove(myregistrytable, 1) */
   lua_getglobal(L, "table");
   lua_getfield(L, -1, "remove");
   /* remove table reference */
   lua_remove(L, -2);		
-  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
+  lua_getfield(L, LUA_REGISTRYINDEX, privatep->key);
   lua_pushinteger(L, 1);
   lua_call(L, 2, 1);
   return 1;
@@ -167,7 +177,7 @@ static int l_multi_perform_internal (lua_State *L) {
   int remain;
   int n;
 
-  l_multi_perform_ingernal_getfrombuffer(L);
+  l_multi_perform_internal_getfrombuffer(L, privatep);
   /* no data in buffer: try another perform */
   while (lua_isnil(L, -1)) {	
     lua_pop(L, -1);
@@ -180,7 +190,7 @@ static int l_multi_perform_internal (lua_State *L) {
     privatep->last_remain = remain;
 
     /* got data ? */
-    l_multi_perform_ingernal_getfrombuffer(L);
+    l_multi_perform_internal_getfrombuffer(L, privatep);
     /* block for more data */
     if (lua_isnil(L, -1) && remain) {
       fd_set fdread;
