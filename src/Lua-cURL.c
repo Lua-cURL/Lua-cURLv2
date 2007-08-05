@@ -305,12 +305,6 @@ int l_easy_gc(lua_State *L) {
 
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
-
-  /* we depend on the table library */
-  lua_getglobal(L, "require");
-  lua_pushstring(L, "table");
-  lua_call(L, 1, 0);
-
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
   
   /* register in easymetatable */
@@ -329,6 +323,13 @@ int luaopen_cURL(lua_State *L) {
     /* multemetatable.__index = multimetatable */
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
+
+
+  /* creaty uniqe table in registry to store state */
+  lua_newtable(L);
+  lua_setfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY);
+  lua_pop(L, 1);		/* pop table */
+
 
   /* return module functions */
   luaL_register(L, "cURL", luacurl_f);

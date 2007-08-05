@@ -29,11 +29,11 @@
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
-/* REGISTRYINDEX[MULTIREGISTRY_KEY..MULTIPOINTER] = {
-   { 1=type, 2=data, 3=EASY_HANDLE
-   } 
-   { 1=type, 2=data, 3=EASY_HANDLE
-   }
+/* REGISTRYINDEX[MULTIREGISTRY_KEY]  = {
+   MULTIPOINTER = { 1={ 1=type, 2=data, 3=EASY_HANDLE}
+                  { 2={ 1=type, 2=data, 3=EASY_HANDLE}
+   EASYPOINTER1 = {EASYUSERDATA1}
+   EASYPOINTER2 = {EASYPOINTER2}
 }
  */
 
@@ -76,8 +76,11 @@ int l_multi_init(lua_State *L) {
     luaL_error(L, "something went wrong and you cannot use the other curl functions");
 
   /* creaty uniqe table in registry to store state for callback functions */
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  lua_pushlightuserdata(L, multi_userdata);
   lua_newtable(L);
-  lua_setfield(L, LUA_REGISTRYINDEX, multi_userdata->key);
+  lua_settable(L, -3);
+  lua_pop(L, 1);
   /* return userdata */
   return 1;			
 }
@@ -92,7 +95,12 @@ static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *
   lua_getfield(L, -1, "insert");
   /* remove table reference */
   lua_remove(L, -2);		
-  lua_getfield(L, LUA_REGISTRYINDEX, callbackdata->multip->key); 
+
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  lua_pushlightuserdata(L, callbackdata->multip);
+  lua_gettable(L, -2);
+  /* remove registry table */
+  lua_remove(L, -2);
 
   /* create new table containing callbackdata */
   lua_newtable(L);		
@@ -162,7 +170,14 @@ static int l_multi_perform_internal_getfrombuffer(lua_State *L, l_multi_userdata
   lua_getfield(L, -1, "remove");
   /* remove table reference */
   lua_remove(L, -2);		
-  lua_getfield(L, LUA_REGISTRYINDEX, privatep->key);
+
+  /* get callback table */
+  lua_getfield(L, LUA_REGISTRYINDEX, MULTIREGISTRY_KEY); 
+  lua_pushlightuserdata(L, privatep);
+  lua_gettable(L, -2);
+  /* remove table  */
+  lua_remove(L, -2);
+
   lua_pushinteger(L, 1);
   lua_call(L, 2, 1);
   return 1;
