@@ -62,6 +62,8 @@ static l_multi_userdata* l_multi_newuserdata(lua_State *L) {
   if ((multi_userdata->key = malloc(size)) == NULL)
     luaL_error(L, "cannot malloc multuserdata");
   snprintf(multi_userdata->key, size, "%s%p", MULTIREGISTRY_KEY, multi_userdata);
+  luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
+  lua_setmetatable(L, -2);
   return multi_userdata;
 }
 
@@ -69,8 +71,6 @@ static l_multi_userdata* l_multi_newuserdata(lua_State *L) {
 int l_multi_init(lua_State *L) {
   
   l_multi_userdata *multi_userdata = l_multi_newuserdata(L);
-  luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
-  lua_setmetatable(L, -2);
 
   if ((multi_userdata->curlm = curl_multi_init()) == NULL)
     luaL_error(L, "something went wrong and you cannot use the other curl functions");
