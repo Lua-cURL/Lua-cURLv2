@@ -39,7 +39,6 @@
 
 typedef struct l_multi_userdata {
   CURLM *curlm;
-  char *key;				/* registry key */
   int last_remain;			/* remaining easy sockets */
   int n_easy;				/* number of easy handles */
 } l_multi_userdata;
@@ -56,12 +55,8 @@ typedef struct l_multi_callbackdata {
 
 static l_multi_userdata* l_multi_newuserdata(lua_State *L) { 
   l_multi_userdata *multi_userdata = (l_multi_userdata *) lua_newuserdata(L, sizeof(l_multi_userdata));
-  int size =  snprintf(multi_userdata->key, 0, "%s%p", MULTIREGISTRY_KEY, multi_userdata) + 1;
   multi_userdata->n_easy = 0;
   multi_userdata->last_remain = 1;		/* dummy: not null */
-  if ((multi_userdata->key = malloc(size)) == NULL)
-    luaL_error(L, "cannot malloc multuserdata");
-  snprintf(multi_userdata->key, size, "%s%p", MULTIREGISTRY_KEY, multi_userdata);
   luaL_getmetatable(L, LUACURL_MULTIMETATABLE);
   lua_setmetatable(L, -2);
   return multi_userdata;
