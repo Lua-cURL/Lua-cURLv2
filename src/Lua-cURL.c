@@ -298,6 +298,7 @@ int l_version_info (lua_State *L) {
 int l_easy_gc(lua_State *L) {
   /* gc resources optained by cURL userdata */
   l_easy_private *privp = lua_touserdata(L, 1);
+  printf("Easy cleanup: %p\n", privp);
   curl_easy_cleanup(privp->curl);
   return 0;
 }
