@@ -21,6 +21,8 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+#include <string.h>
+
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
 
@@ -48,6 +50,29 @@ static int l_easy_setopt_string(lua_State *L) {
   return 0;
 }
 
+static int l_easy_setopt_proxytype(lua_State *L) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
+  const char *value = luaL_checkstring(L, 2);
+
+  /* check for valid OPTION: */
+  curl_proxytype type;
+
+  if (!strcmp("HTTP", value)) 
+    type = CURLPROXY_HTTP;
+  else if (!strcmp("SOCKS4", value)) 
+    type = CURLPROXY_SOCKS4;
+  else if (!strcmp("SOCKS5", value)) 
+    type = CURLPROXY_SOCKS5;
+  else 
+    luaL_error(L, "Invalid proxytype: %s", value);
+
+  if (curl_easy_setopt(curl, *optionp, type) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);  
+  return 0;
+}
+
 /* closures assigned to setopt in setopt table */
 static struct {
   const char *name;
@@ -60,10 +85,25 @@ static struct {
   {P"noprogrss", CURLOPT_NOPROGRESS, l_easy_setopt_long},
   {P"nosignal", CURLOPT_NOSIGNAL, l_easy_setopt_long},
   /* callback options */
-  /* implemented differently */
+  /* network options */
+  /* names and passwords options  */
+  /* http options */
+  /* ftp options */
+  /* protocol options */
   /* network options */
   {P"url", CURLOPT_URL, l_easy_setopt_string},
-
+  {P"proxy", CURLOPT_PROXY, l_easy_setopt_string},
+  {P"proxyport", CURLOPT_PROXYPORT, l_easy_setopt_long},
+  {P"proxytype", CURLOPT_PROXYTYPE, l_easy_setopt_proxytype},
+  {P"httpproxytunnel", CURLOPT_HTTPPROXYTUNNEL, l_easy_setopt_long},
+  {P"interface", CURLOPT_INTERFACE, l_easy_setopt_string},
+  {P"localport", CURLOPT_LOCALPORT, l_easy_setopt_long},
+  {P"localportrange", CURLOPT_LOCALPORTRANGE, l_easy_setopt_long},
+  {P"dns_cache_timeout", CURLOPT_DNS_CACHE_TIMEOUT, l_easy_setopt_long},
+  {P"dns_use_global_cache", CURLOPT_DNS_USE_GLOBAL_CACHE, l_easy_setopt_long},
+  {P"buffersize", CURLOPT_BUFFERSIZE, l_easy_setopt_long},
+  {P"port", CURLOPT_PORT, l_easy_setopt_long},
+  {P"TCP_nodelay", CURLOPT_TCP_NODELAY, l_easy_setopt_long},
   {P"ssl_verifypeer", CURLOPT_SSL_VERIFYPEER, l_easy_setopt_long},
   /* dummy opt value */
   {NULL, CURLOPT_VERBOSE, NULL}};	
