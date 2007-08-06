@@ -31,8 +31,8 @@
 static int l_easy_setopt_long(lua_State *L) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
-  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 2);
-  long value = luaL_checklong(L,1);
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
+  long value = luaL_checklong(L,2);
 
   if (curl_easy_setopt(curl, *optionp, value) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);
@@ -90,6 +90,21 @@ static struct {
   /* http options */
   /* ftp options */
   /* protocol options */
+  {P"transfertext", CURLOPT_TRANSFERTEXT, l_easy_setopt_long},
+  {P"crlf", CURLOPT_CRLF, l_easy_setopt_long},
+  {P"range", CURLOPT_RANGE, l_easy_setopt_string},
+  {P"resume_from", CURLOPT_RESUME_FROM, l_easy_setopt_long},
+  {P"resume_from_large", CURLOPT_RESUME_FROM_LARGE, l_easy_setopt_long},
+  {P"customrequest", CURLOPT_CUSTOMREQUEST, l_easy_setopt_string},
+  {P"filetime", CURLOPT_FILETIME, l_easy_setopt_long},
+  {P"nobody", CURLOPT_NOBODY, l_easy_setopt_long},
+  {P"infilesize", CURLOPT_INFILESIZE, l_easy_setopt_long},
+  {P"infilesize_large", CURLOPT_INFILESIZE_LARGE, l_easy_setopt_long},
+  {P"upload", CURLOPT_UPLOAD, l_easy_setopt_long},
+  {P"maxfilesize", CURLOPT_MAXFILESIZE, l_easy_setopt_long},
+  {P"maxfilesize_large", CURLOPT_MAXFILESIZE_LARGE, l_easy_setopt_long},
+  {P"timecondition", CURLOPT_TIMECONDITION, l_easy_setopt_long},
+  {P"timevalue ", CURLOPT_TIMEVALUE , l_easy_setopt_long},
   /* network options */
   {P"url", CURLOPT_URL, l_easy_setopt_string},
   {P"proxy", CURLOPT_PROXY, l_easy_setopt_string},
@@ -113,6 +128,7 @@ int l_easy_setopt_register(lua_State *L) {
 
   /* register setopt closures */
   for (i=0; luacurl_setopt_c[i].name != NULL; i++) {
+    printf("Registering: %s\n", luacurl_setopt_c[i].name);
     CURLoption *optionp = &(luacurl_setopt_c[i].option);
     lua_pushlightuserdata(L, optionp);
     lua_pushcclosure(L, luacurl_setopt_c[i].func, 1);
