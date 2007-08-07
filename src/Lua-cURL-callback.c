@@ -21,8 +21,26 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+#include <string.h>		/* memcpy */
+
 #include "Lua-cURL.h"
 #include "Lua-utility.h"
+
+static int l_easy_readfunction(void *ptr, size_t size, size_t nmemb, void *stream) {
+  lua_State* L = (lua_State*)stream;
+  size_t n;
+  int old_top = lua_gettop(L);
+  const char *str;
+  lua_getfield(L, -1, "readfunction");
+  lua_pushinteger(L, nmemb * size);
+  lua_call(L, 1, 1);
+  str = lua_tolstring(L, -1, &n);
+  if (n > nmemb*size)
+    luaL_error(L, "String returned from readfunction is too long (%d)", n);
+  memcpy(ptr, str, n);
+  lua_settop(L, old_top);
+  return n;
+}
 
 static int l_easy_writefunction(void *ptr, size_t size, size_t nmemb, void *stream) {
   lua_State* L = (lua_State*)stream;
@@ -52,6 +70,16 @@ int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
   return 0;
 }
 
+int l_easy_setup_readfunction(lua_State *L, CURL* curl) {
+    /* Lua State as userdata argument */
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  if (curl_easy_setopt(curl, CURLOPT_READDATA ,L) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);
+  if (curl_easy_setopt(curl, CURLOPT_READFUNCTION, l_easy_readfunction) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);
+  return 0;
+}
+
 int l_easy_setup_headerfunction(lua_State *L, CURL* curl) {
   /* Lua State as userdata argument */
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
@@ -65,7 +93,6 @@ int l_easy_setup_headerfunction(lua_State *L, CURL* curl) {
 
 int l_easy_clear_headerfunction(lua_State *L, CURL* curl) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
-  printf("Unsetting header\n");
   if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);
   return 0;
@@ -73,8 +100,14 @@ int l_easy_clear_headerfunction(lua_State *L, CURL* curl) {
 
 int l_easy_clear_writefunction(lua_State *L, CURL* curl) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
-  printf("Unsetting write\n");
   if (curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);
+  return 0;
+}
+
+int l_easy_clear_readfunction(lua_State *L, CURL* curl) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  if (curl_easy_setopt(curl, CURLOPT_READFUNCTION, NULL) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);
   return 0;
 }

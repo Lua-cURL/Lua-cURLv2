@@ -79,6 +79,8 @@ int l_easy_perform(lua_State *L) {
   int writefunction;
   /* do headercallback */
   int headerfunction;
+  /* do readcallback */
+  int readfunction;
 
   /* check optional callback table */
   luaL_opt(L, luaL_checktable, 2, lua_newtable(L));
@@ -96,6 +98,13 @@ int l_easy_perform(lua_State *L) {
   if (headerfunction)
     l_easy_setup_headerfunction(L, privatep->curl);
   lua_pop(L, 1);
+
+  /* setup read callback function only if entry exists in callback-table */
+  lua_getfield(L, 2, "readfunction");
+  readfunction = lua_isfunction(L, -1)?1:0;
+  if (readfunction)
+    l_easy_setup_readfunction(L, privatep->curl);
+  lua_pop(L, 1);
   
 
   /* callback table is on top on stack */
@@ -107,7 +116,8 @@ int l_easy_perform(lua_State *L) {
     l_easy_clear_headerfunction(L, privatep->curl);
   if (writefunction) 
     l_easy_clear_writefunction(L, privatep->curl);
-
+  if (readfunction)
+    l_easy_clear_readfunction(L, privatep->curl);
   return 0;
 }
 
