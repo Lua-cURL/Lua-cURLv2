@@ -3,7 +3,7 @@
 require("cURL")
 
 c=cURL.easy_init()
-c:setopt_url("ftp://ftptest:secret0815@localhost/file.dat")
+c:setopt_url("ftp://ftptest:secret0815@targethost/file.dat")
 c:setopt_upload(1)
 count=0
 c:perform({readfunction=function(n) 
