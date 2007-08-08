@@ -128,7 +128,6 @@ int l_easy_setopt_register(lua_State *L) {
 
   /* register setopt closures */
   for (i=0; luacurl_setopt_c[i].name != NULL; i++) {
-    printf("Registering: %s\n", luacurl_setopt_c[i].name);
     CURLoption *optionp = &(luacurl_setopt_c[i].option);
     lua_pushlightuserdata(L, optionp);
     lua_pushcclosure(L, luacurl_setopt_c[i].func, 1);
