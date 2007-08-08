@@ -1,5 +1,6 @@
+registryfunctionen(lookup) vereinhatlichen: eigene funktion machen -> zuviel duplicated code
 Code-cleanup: Cleanup version.info
 Check arguments to: lua_multi_init
 splitup: easy/mutli sourcecode
 multi: garbagecollect callbackdata
-       
+configure.in: dont assume pkgconfig, rusults in rpath errro	[CMOD_INSTALL="`${PKG_CONFIG} --variable=INSTALL_CMOD lua`"])       
