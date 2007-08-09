@@ -181,6 +181,24 @@ int l_version(lua_State *L) {
 int l_version_info (lua_State *L) {
   int i;
   curl_version_info_data *d = curl_version_info(CURLVERSION_NOW);	
+  struct {char *name; int bitmask;} features[] = {
+    {"ipv6", CURL_VERSION_IPV6},
+    {"kerberos4", CURL_VERSION_KERBEROS4},
+    {"ssl", CURL_VERSION_SSL},
+    {"libz", CURL_VERSION_LIBZ},
+    {"ntlm",CURL_VERSION_NTLM},
+    {"gssnegotiate",CURL_VERSION_GSSNEGOTIATE},
+    {"debug",CURL_VERSION_DEBUG},
+    {"asynchdns",CURL_VERSION_ASYNCHDNS},
+    {"spnego",CURL_VERSION_SPNEGO},
+    {"largefile",CURL_VERSION_LARGEFILE},
+    {"idn",CURL_VERSION_IDN},
+    {"sspi",CURL_VERSION_SSPI},
+    {"conv",CURL_VERSION_CONV},
+    {NULL, 0}
+  };
+
+  
 
   lua_newtable(L);
 
@@ -200,61 +218,11 @@ int l_version_info (lua_State *L) {
   lua_pushliteral(L, "features");
   lua_newtable(L);
   
-  lua_pushliteral(L, "ipv6");
-  lua_pushboolean(L, d->features & CURL_VERSION_IPV6);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "kerberos4");
-  lua_pushboolean(L, d->features & CURL_VERSION_KERBEROS4);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "ssl");
-  lua_pushboolean(L, d->features & CURL_VERSION_SSL);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "libz");
-  lua_pushboolean(L, d->features & CURL_VERSION_LIBZ);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "libz");
-  lua_pushboolean(L, d->features & CURL_VERSION_LIBZ);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "ntlm");
-  lua_pushboolean(L, d->features & CURL_VERSION_NTLM);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "gssnegotiate");
-  lua_pushboolean(L, d->features & CURL_VERSION_GSSNEGOTIATE);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "debug");
-  lua_pushboolean(L, d->features & CURL_VERSION_DEBUG);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "asynchdns");
-  lua_pushboolean(L, d->features & CURL_VERSION_ASYNCHDNS);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "spnego");
-  lua_pushboolean(L, d->features & CURL_VERSION_SPNEGO);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "largefile");
-  lua_pushboolean(L, d->features & CURL_VERSION_LARGEFILE);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "idn");
-  lua_pushboolean(L, d->features & CURL_VERSION_IDN);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "sspi");
-  lua_pushboolean(L, d->features & CURL_VERSION_SSPI);
-  lua_settable(L, -3);
-
-  lua_pushliteral(L, "conv");
-  lua_pushboolean(L, d->features & CURL_VERSION_CONV);
-  lua_settable(L, -3);
+  i = 0;
+  while (features[i].name != NULL) {
+    lua_pushboolean(L, d->features & features[i].bitmask);
+    lua_setfield(L, -2, features[i++].name);
+  }
 
   lua_settable(L, -3);
 
