@@ -88,6 +88,35 @@ static struct {
   /* network options */
   /* names and passwords options  */
   /* http options */
+  {P"autoreferer", CURLOPT_AUTOREFERER, l_easy_setopt_long},
+  {P"encoding", CURLOPT_ENCODING, l_easy_setopt_string},
+  {P"followlocation", CURLOPT_FOLLOWLOCATION, l_easy_setopt_long},
+  {P"unrestricted_AUTH", CURLOPT_UNRESTRICTED_AUTH, l_easy_setopt_long},
+  {P"maxredirs", CURLOPT_MAXREDIRS, l_easy_setopt_long},
+  {P"put", CURLOPT_PUT, l_easy_setopt_long},
+  {P"post", CURLOPT_POST, l_easy_setopt_long},
+  {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_long},
+  {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long},
+  {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long},
+  {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long},
+  {P"referer", CURLOPT_REFERER, l_easy_setopt_long},
+  {P"useragent", CURLOPT_USERAGENT, l_easy_setopt_long},
+  {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_long},
+  {P"http200aliases", CURLOPT_HTTP200ALIASES, l_easy_setopt_long},
+  {P"cookie", CURLOPT_COOKIE, l_easy_setopt_long},
+  {P"cookiefile", CURLOPT_COOKIEFILE, l_easy_setopt_long},
+  {P"cookiejar", CURLOPT_COOKIEJAR, l_easy_setopt_long},
+  {P"cookiesession", CURLOPT_COOKIESESSION, l_easy_setopt_long},
+  {P"cookielist", CURLOPT_COOKIELIST, l_easy_setopt_long},
+  {P"httpget", CURLOPT_HTTPGET, l_easy_setopt_long},
+  {P"http_version", CURLOPT_HTTP_VERSION, l_easy_setopt_long},
+  {P"ignore_content_length", CURLOPT_IGNORE_CONTENT_LENGTH, l_easy_setopt_long},
+#ifdef CURLOPT_HTTP_CONTENT_DECODING
+  {P"http_content_decoding", CURLOPT_HTTP_CONTENT_DECODING, l_easy_setopt_long},
+#endif
+#ifdef CURLOPT_HTTP_TRANSFER_DECODING
+  {P"http_transfer_decoding ", CURLOPT_HTTP_TRANSFER_DECODING , l_easy_setopt_long},
+#endif
   /* ftp options */
   /* protocol options */
   {P"transfertext", CURLOPT_TRANSFERTEXT, l_easy_setopt_long},
