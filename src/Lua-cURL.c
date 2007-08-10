@@ -276,13 +276,13 @@ int l_version_info (lua_State *L) {
 int l_easy_gc(lua_State *L) {
   /* gc resources optained by cURL userdata */
   l_easy_private *privp = lua_touserdata(L, 1);
-  printf("Easy cleanup: %p\n", privp);
   curl_easy_cleanup(privp->curl);
   return 0;
 }
 
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
+  CURLcode  rc;
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
   
   /* register in easymetatable */
@@ -311,6 +311,10 @@ int luaopen_cURL(lua_State *L) {
 
   /* return module functions */
   luaL_register(L, "cURL", luacurl_f);
+
+  /* initialize curl once */
+  if ((rc = curl_global_init(CURL_GLOBAL_ALL)) != CURLE_OK)
+    luaL_error(L, "curl_global_init: %s", curl_easy_strerror(rc));
   return 1;
 }
 
