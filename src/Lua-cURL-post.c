@@ -96,7 +96,6 @@ int l_easy_post(lua_State *L) {
       }
       /* data field */
       else if ((file != NULL) && (data != NULL)) {
-	printf("Using datalen: %d\n", datalen);
 	/* Add a buffer to upload */
 	rc = (type != NULL)? 
 	  curl_formadd(&post, &last,
