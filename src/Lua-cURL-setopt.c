@@ -50,6 +50,34 @@ static int l_easy_setopt_string(lua_State *L) {
   return 0;
 }
 
+static int l_easy_setopt_strings(lua_State *L) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
+  struct curl_slist *headerlist = NULL;
+  int i = 1;
+  if (lua_isstring(L, 2)) 
+    headerlist = curl_slist_append(headerlist, lua_tostring(L, 2));
+  else {
+    if (lua_type(L, 2) != LUA_TTABLE)
+      luaL_error(L, "wrong argument (%s): expected string or table", lua_typename(L, 2));
+    
+    lua_rawgeti(L, 2, i++);
+    while (!lua_isnil(L, -1)) {
+      headerlist = curl_slist_append(headerlist, lua_tostring(L, -1));
+      lua_pop(L, 1);
+      lua_rawgeti(L, 2, i++);
+    } 
+    lua_pop(L, 1);
+  }
+
+  if (curl_easy_setopt(curl, *optionp, headerlist) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);  
+  /* memory leak: we need to free this in __gc */
+  /*   curl_slist_free_all(headerlist);  */
+  return 0;
+}
+
 static int l_easy_setopt_proxytype(lua_State *L) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
@@ -103,7 +131,7 @@ static struct {
   /*   {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long}, */
   {P"referer", CURLOPT_REFERER, l_easy_setopt_string},
   {P"useragent", CURLOPT_USERAGENT, l_easy_setopt_string},
-/*  Not implemented:  {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_long}, */
+  {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_strings}, 
 /*  Not implemented:  {P"http200aliases", CURLOPT_HTTP200ALIASES, l_easy_setopt_long}, */
   {P"cookie", CURLOPT_COOKIE, l_easy_setopt_string},
   {P"cookiefile", CURLOPT_COOKIEFILE, l_easy_setopt_string},
