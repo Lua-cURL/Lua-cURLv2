@@ -88,28 +88,32 @@ static struct {
   /* network options */
   /* names and passwords options  */
   /* http options */
+  
   {P"autoreferer", CURLOPT_AUTOREFERER, l_easy_setopt_long},
   {P"encoding", CURLOPT_ENCODING, l_easy_setopt_string},
   {P"followlocation", CURLOPT_FOLLOWLOCATION, l_easy_setopt_long},
   {P"unrestricted_AUTH", CURLOPT_UNRESTRICTED_AUTH, l_easy_setopt_long},
   {P"maxredirs", CURLOPT_MAXREDIRS, l_easy_setopt_long},
-  {P"put", CURLOPT_PUT, l_easy_setopt_long},
-  {P"post", CURLOPT_POST, l_easy_setopt_long},
-  {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_long},
-  {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long},
-  {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long},
-  {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long},
-  {P"referer", CURLOPT_REFERER, l_easy_setopt_long},
-  {P"useragent", CURLOPT_USERAGENT, l_easy_setopt_long},
-  {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_long},
-  {P"http200aliases", CURLOPT_HTTP200ALIASES, l_easy_setopt_long},
-  {P"cookie", CURLOPT_COOKIE, l_easy_setopt_long},
-  {P"cookiefile", CURLOPT_COOKIEFILE, l_easy_setopt_long},
-  {P"cookiejar", CURLOPT_COOKIEJAR, l_easy_setopt_long},
+  /* not implemented */
+  /*   {P"put", CURLOPT_PUT, l_easy_setopt_long}, */
+  /*   {P"post", CURLOPT_POST, l_easy_setopt_long}, */
+  /*   {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_long}, */
+  /*   {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long}, */
+  /*   {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long}, */
+  /*   {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long}, */
+  {P"referer", CURLOPT_REFERER, l_easy_setopt_string},
+  {P"useragent", CURLOPT_USERAGENT, l_easy_setopt_string},
+/*  Not implemented:  {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_long}, */
+/*  Not implemented:  {P"http200aliases", CURLOPT_HTTP200ALIASES, l_easy_setopt_long}, */
+  {P"cookie", CURLOPT_COOKIE, l_easy_setopt_string},
+  {P"cookiefile", CURLOPT_COOKIEFILE, l_easy_setopt_string},
+  {P"cookiejar", CURLOPT_COOKIEJAR, l_easy_setopt_string},
   {P"cookiesession", CURLOPT_COOKIESESSION, l_easy_setopt_long},
-  {P"cookielist", CURLOPT_COOKIELIST, l_easy_setopt_long},
+#ifdef CURLOPT_COOKIELIST
+  {P"cookielist", CURLOPT_COOKIELIST, l_easy_setopt_string},
+#endif
   {P"httpget", CURLOPT_HTTPGET, l_easy_setopt_long},
-  {P"http_version", CURLOPT_HTTP_VERSION, l_easy_setopt_long},
+/*  Not implemented: {P"http_version", CURLOPT_HTTP_VERSION, l_easy_setopt_long}, */
   {P"ignore_content_length", CURLOPT_IGNORE_CONTENT_LENGTH, l_easy_setopt_long},
 #ifdef CURLOPT_HTTP_CONTENT_DECODING
   {P"http_content_decoding", CURLOPT_HTTP_CONTENT_DECODING, l_easy_setopt_long},
@@ -149,6 +153,27 @@ static struct {
   {P"port", CURLOPT_PORT, l_easy_setopt_long},
   {P"TCP_nodelay", CURLOPT_TCP_NODELAY, l_easy_setopt_long},
   {P"ssl_verifypeer", CURLOPT_SSL_VERIFYPEER, l_easy_setopt_long},
+  /* ssl options */
+  {P"sslcert", CURLOPT_SSLCERT, l_easy_setopt_string},
+  {P"sslcerttype", CURLOPT_SSLCERTTYPE, l_easy_setopt_string},
+  {P"sslcertpasswd", CURLOPT_SSLCERTPASSWD, l_easy_setopt_string},
+  {P"sslkey", CURLOPT_SSLKEY, l_easy_setopt_string},
+  {P"sslkeytype", CURLOPT_SSLKEYTYPE, l_easy_setopt_string},
+  {P"sslkeypasswd", CURLOPT_SSLKEYPASSWD, l_easy_setopt_string},
+  {P"sslengine", CURLOPT_SSLENGINE, l_easy_setopt_string},
+  {P"sslengine_default", CURLOPT_SSLENGINE_DEFAULT, l_easy_setopt_long},
+  /* not implemented  {P"sslversion", CURLOPT_SSLVERSION, l_easy_setopt_string}, */
+  {P"ssl_verifypeer", CURLOPT_SSL_VERIFYPEER, l_easy_setopt_long},
+  {P"cainfo", CURLOPT_CAINFO, l_easy_setopt_string},
+  {P"capath", CURLOPT_CAPATH, l_easy_setopt_string},
+  {P"random_file", CURLOPT_RANDOM_FILE, l_easy_setopt_string},
+  {P"egdsocket", CURLOPT_EGDSOCKET, l_easy_setopt_string},
+  {P"ssl_verifyhost", CURLOPT_SSL_VERIFYHOST, l_easy_setopt_long},
+  {P"ssl_cipher_list", CURLOPT_SSL_CIPHER_LIST, l_easy_setopt_string},
+#ifdef CURLOPT_SSL_SESSIONID_CACHE
+  {P"ssl_sessionid_cache", CURLOPT_SSL_SESSIONID_CACHE, l_easy_setopt_long},
+#endif
+  /* not implemented:   {P"krblevel", CURLOPT_KRBLEVEL, l_easy_setopt_string}, */
   /* dummy opt value */
   {NULL, CURLOPT_VERBOSE, NULL}};	
 
