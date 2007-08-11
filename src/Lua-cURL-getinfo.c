@@ -73,8 +73,7 @@ static int l_easy_getinfo_curl_slist(lua_State *L) {
   struct curl_slist *list;
   struct curl_slist *next;
   int i;
-  
-  stackDump(L);
+
   if (curl_easy_getinfo(curl, *infop, &list) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);
   
