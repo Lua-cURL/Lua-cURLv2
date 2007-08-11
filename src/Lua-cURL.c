@@ -64,7 +64,7 @@ int l_easy_escape(lua_State *L) {
   size_t length = 0;
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
-  const char *url = luaL_checklstring(L, 1, &length);
+  const char *url = luaL_checklstring(L, 2, &length);
   char *rurl = curl_easy_escape(curl, url, length);
   lua_pushstring(L, rurl);
   curl_free(rurl);
@@ -155,7 +155,7 @@ int l_easy_unescape(lua_State *L) {
   int outlength;
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
-  const char *url = luaL_checklstring(L, 1, &inlength);
+  const char *url = luaL_checklstring(L, 2, &inlength);
   char *rurl = curl_easy_unescape(curl, url, inlength, &outlength);
   lua_pushlstring(L, rurl, outlength);
   curl_free(rurl);
