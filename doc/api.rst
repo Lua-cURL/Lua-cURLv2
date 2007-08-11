@@ -4,7 +4,7 @@ Lua-cURL
 
 :Author: Jürgen Hötzel
 :Contact: http://www.hoetzel.info/
-:Date: $Date: 2007/08/09 20:20:08 $
+:Date: $Date: 2007/08/11 20:49:09 $
 :Copyright: This document has been placed in the public domain.
 
 .. contents::
@@ -53,8 +53,15 @@ Register a read callback:
 ..  include:: ../examples/ftpupload.lua
     :literal:
 
+Example 3: "Posting" data
+.........................
 
-Differencesf
+.. include:: ../examples/post.lua
+   :literal:
+
+
+
+Differences
 ------------------
 
 Differences in easy setopt

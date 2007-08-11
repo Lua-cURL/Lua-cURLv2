@@ -1,6 +1,14 @@
+memoryleak in setopt_strings
+Cookie:
 registryfunctionen(lookup) vereinhatlichen: eigene funktion machen -> zuviel duplicated code
-Code-cleanup: Cleanup version.info
-Check arguments to: lua_multi_init
 splitup: easy/mutli sourcecode
 multi: garbagecollect callbackdata
 configure.in: dont assume pkgconfig, rusults in rpath errro	[CMOD_INSTALL="`${PKG_CONFIG} --variable=INSTALL_CMOD lua`"])       
+
+implement:
+  /*   {P"put", CURLOPT_PUT, l_easy_setopt_long}, */
+  /*   {P"post", CURLOPT_POST, l_easy_setopt_long}, */
+  /*   {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_long}, */
+  /*   {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long}, */
+  /*   {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long}, */
+  /*   {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long}, */
