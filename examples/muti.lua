@@ -14,7 +14,7 @@ m2:add_handle(c2)
 -- perform, 
 -- it = m:perform()
 
-for data,type,easy in m:perform() do 
+for data, type, easy in m:perform() do 
    if (type == "data" and c == easy) then print(data) end
 end
 
