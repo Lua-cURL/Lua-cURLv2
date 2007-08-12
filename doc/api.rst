@@ -4,7 +4,7 @@ Lua-cURL
 
 :Author: Jürgen Hötzel
 :Contact: http://www.hoetzel.info/
-:Date: $Date: 2007/08/11 20:49:09 $
+:Date: $Date: 2007/08/12 12:00:53 $
 :Copyright: This document has been placed in the public domain.
 
 .. contents::
@@ -12,30 +12,79 @@ Lua-cURL
 Introduction
 ------------------
 
-This project is not a fork of LuaCURL_ which is an direct mapping of parts of the libcurl-easy_ interface.
+This project is **not** a fork of LuaCURL_, which is a direct mapping of parts of the libcurl-easy_ interface.
 
 .. _libcurl-easy: http://curl.haxx.se/libcurl/c/libcurl-easy.html
 .. _LuaCURL: http://luaforge.net/projects/luacurl/
 
-The goal of **Lua-cURL** to make the :
+The intent of Lua-cURL is to adapt the
 
 * Easy Interface
 * Multi Interface
 * Shared Interface 
 
-available while, doing it the Lua way (for example using iterators instead of callbacks) when possible.
+of libcurl_ to the functionality of Lua (for example by using iterators instead of callbacks when possible).
 
-Instead of a 1:1 mapping of all cURL functions, this implementation adapt the api to the functionality of Lua (like LuaExpat)
+.. _libcurl: http://curl.haxx.se/libcurl/c/
+
+Warning
+..................
+This release is a snapshot of development code. Although it is buildable and
+usable, it is far from complete and  primarily intended for testing and hacking purposes. 
 
 Installation
 ------------------
 
-If you don't have pkgconfig configured, you have to specify compiler/linker flags::
+The Autotools chain is used to configure, build and install. Just invoke::
 
-    LUA_CFLAGS="-I/usr/local/include" LUA_LIBS="-L/usr/local/lib -lm -llua" ./configure  --with-cmoddir=/usr/lib/lua/5.1
+    ./configure && make install 
+
+
+If your Lua installation doesn't contain pkg-config support, you have to specify compiler/linker flags and the target directory::
+
+    LUA_CFLAGS="-I/usr/local/include" LUA_LIBS="-L/usr/local/lib -lm -llua" ./configure  --with-cmoddir=/usr/local/lib/lua/5.1
 
 Easy interface
 ------------------
+
+**cURL.easy_init()**
+  returns a new easy handle.
+
+**cURL.version_info()**
+  returns a table containing version info and features/protocols sub table
+
+**easy:escape(string)**
+  return URL encoded string
+
+**easy:unescape(string)**
+  return URL decoded string
+
+**easy:setopt\*(value)**
+  libcurl properties an options are mapped to individual functions: 
+   * **easy:setopt_url(string)**
+   * **easy:setopt_verbose(number)**
+   * **easy:setopt_proxytype(string)**
+   * ...
+
+**easy:perform(table)**
+  Perform the transfer as described in the options, using an optional callback table.The callback table indices are named after the equivalent cURL callbacks:
+   *  **writefunction = function(str)**
+   *  **readfunction = function()**
+   *  **headerfunction = function(str)**
+
+**easy:post(table)**
+  Prepare a multipart/formdata post. The table indices are named after the form fields and should map to string values::
+
+    {field1 = value1,
+     field2 = value1}
+  
+  or more generic descriptions in tables::
+
+    {field1 = {file="/tmp/test.txt",
+               type="text/plain"},
+    {field2 = {file="dummy.html",
+               data="<html><bold>bold</bold></html>,
+               type="text/html"}}
 
 
 Example 1: Fetch the example.com homepage
@@ -45,10 +94,8 @@ Example 1: Fetch the example.com homepage
     :literal:
 
 
-Example 2: "On the fly" Fileupload
+Example 2: "On-The-Fly" file upload
 ...................................
-
-Register a read callback:
 
 ..  include:: ../examples/ftpupload.lua
     :literal:
@@ -60,26 +107,34 @@ Example 3: "Posting" data
    :literal:
 
 
-
-Differences
-------------------
-
-Differences in easy setopt
-..........................
-`setopt_proxytype` requires a string argument::
-
-  c:setopt_proxytype("SOCKS4")
-
-curl_version_info
-..........................
-
-Returns a table, containing version info and features/protocols subtable
-
-..  include:: ../examples/version_info.lua
-    :literal:
-
-
 Multi interface
-------------------
+--------------------
+
+**cURL.multi_init()** 
+  returns a new multi handle
+
+**multi:add_handle(easy)**
+  add an easy handle to a multi session
+
+**multi:perform()**
+  returns an iterator function that, each time it is called, returns the next data, type and corresponding easy handle:
+  
+    **data**:
+       data returned by the cURL library
+    **type**
+       type of data returned ("header" or "data")      
+    **easy**
+       corresponding easy handle of the data returned
+
+ 
+Example 1: "On-The-Fly" XML parsing
+.........................................
+
+.. include:: ../examples/rss.lua
+   :literal:
+
+
+
+
 
 

@@ -9,10 +9,7 @@ c:setopt_url("http://www.example.com/")
 -- perform, invokes callbacks
 c:perform({writefunction = function(str) 
 				f:write(str)
-			     end,
-	   headerfunction = print})
-       
-
+			     end})
 
 -- close output file
 f:close()

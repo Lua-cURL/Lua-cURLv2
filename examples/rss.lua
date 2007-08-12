@@ -2,9 +2,10 @@
 require("lxp")
 require("cURL")
 
-callback = {}
 tags = {}			
 items = {}
+
+callback = {}
 
 function callback.StartElement(parser, tagname)
    tags[#tags + 1] = tagname
@@ -20,9 +21,9 @@ function callback.CharacterData(parser, str)
    end
 end
 function callback.EndElement(parser, tagname)
-   tags[#tags] = nil		--assuming well formed xml
+   --assuming well formed xml
+   tags[#tags] = nil		
 end
-
 
 p = lxp.new(callback)
 
@@ -40,12 +41,13 @@ for data,type in m:perform() do
    end
 end
 
-assert(p:parse())		--finish document
+--finish document
+assert(p:parse())		
 p:close()
 
 for i, item in ipairs(items) do 
    for k, v in pairs(item) do 
       print(k,v)
    end
-   print()			--newline
+   print()		
 end

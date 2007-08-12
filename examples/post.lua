@@ -1,7 +1,7 @@
 require("cURL")
 
 c = cURL.easy_init()
--- setup url
+
 c:setopt_url("http://localhost")
 postdata = {  
    -- post file from filesystem
@@ -12,12 +12,6 @@ postdata = {
 	    data="<html><bold>bold</bold></html>",
 	    type="text/html"}}
 c:post(postdata)
-
-    
--- perform, invokes callbacks
 c:perform()
--- close output file
 
 print("Done")
-
-
