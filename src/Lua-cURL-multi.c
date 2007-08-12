@@ -261,6 +261,6 @@ int l_multi_perform (lua_State *L) {
 
 int l_multi_gc (lua_State *L) {
   l_multi_userdata *privatep = luaL_checkudata(L, 1, LUACURL_MULTIMETATABLE);  
-  printf("Not implemented: have to cleanup easyhandles: %d\n", privatep->n_easy);
+  /*   printf("Not implemented: have to cleanup easyhandles: %d\n", privatep->n_easy); */
   return 0;
 }
