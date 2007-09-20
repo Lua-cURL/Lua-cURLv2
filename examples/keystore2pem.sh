@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# $Id: keystore2pem.sh,v 1.1 2007/09/20 20:35:38 juergen Exp $
+# $Id: keystore2pem.sh,v 1.2 2007/09/20 20:39:13 juergen Exp $
 
-# Parse JDK/JREs cacerts keystore and extract CA Root Certificates into PEM
+# Convert JDK/JREs cacerts keystore to PEM using keytool/openssl
 # Author: Juergen Hoetzel
 
 
