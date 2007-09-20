@@ -4,7 +4,7 @@ Lua-cURL
 
 :Author: Jürgen Hötzel
 :Contact: http://www.hoetzel.info/
-:Date: $Date: 2007/08/12 12:00:53 $
+:Date: $Date: 2007/09/20 20:49:36 $
 :Copyright: This document has been placed in the public domain.
 
 .. contents::
@@ -135,6 +135,17 @@ Example 1: "On-The-Fly" XML parsing
 
 
 
+Appendix
+----------------------------------------
+
+Using SSL
+.........................
+
+The cert bundle distributed with cURL may be out of date and cannot validate many certificates. You can supply a different 
+PEM cert bundle by using **easy:setopt_cainfo(string)**.
+I wrote a shell script (download_) to convert the cacert keystore distributed with the Java Runtime Environment to PEM.
+
+.. _download: http://www.hoetzel.info/Hacking/Bash%20scripting/keystore2pem.sh
 
 
 
