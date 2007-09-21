@@ -44,11 +44,16 @@ static const struct luaL_Reg luacurl_multi_m[] = {
   {"__gc", l_multi_gc},
   {NULL, NULL}};
 
+static const struct luaL_Reg luacurl_share_m[] = {
+  {"setopt_share", l_share_setopt_share},
+  {"__gc", l_share_gc},
+  {NULL, NULL}};
 
 /* global functions in module namespace*/
 static const struct luaL_Reg luacurl_f[] = {
   {"easy_init", l_easy_init},
   {"multi_init", l_multi_init},
+  {"share_init", l_share_init},
   {"getdate", l_getdate},
   {"unescape", l_unescape},
   {"version", l_version},
@@ -288,6 +293,8 @@ int l_easy_gc(lua_State *L) {
 /* registration hook function */
 int luaopen_cURL(lua_State *L) {
   CURLcode  rc;
+
+  /* EASY START */
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
   
   /* register in easymetatable */
@@ -301,6 +308,18 @@ int luaopen_cURL(lua_State *L) {
   /* register setopt closures  */
   l_easy_setopt_register(L);  
 
+  
+  /* SHARE START */
+  luaL_newmetatable(L, LUACURL_SHAREMETATABLE);
+  
+  /* register in sharemetatable */
+  luaL_register(L, NULL, luacurl_share_m);  
+
+  /* sharemetatable.__index = sharemetatable */
+  lua_pushvalue(L, -1);
+  lua_setfield(L, -2, "__index");
+  
+  /* MULTI START */
   luaL_newmetatable(L, LUACURL_MULTIMETATABLE);  
   luaL_register(L, NULL, luacurl_multi_m);  
     /* multemetatable.__index = multimetatable */

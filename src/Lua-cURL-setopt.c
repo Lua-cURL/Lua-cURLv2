@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "Lua-cURL.h"
+#include "Lua-cURL-share.h"
 #include "Lua-utility.h"
 
 #define P "setopt_"
@@ -134,6 +135,18 @@ static int l_easy_setopt_proxytype(lua_State *L) {
   return 0;
 }
 
+static int l_easy_setopt_share(lua_State *L) {
+  l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+  CURL *curl = privatep->curl;
+  CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
+  CURLSH *curlsh = ((l_share_userdata*) luaL_checkudata(L, 2, LUACURL_SHAREMETATABLE))->curlsh;
+  
+  if (curl_easy_setopt(curl, CURLOPT_SHARE, curlsh) != CURLE_OK)
+    luaL_error(L, "%s", privatep->error);  
+  return 0;
+}
+
+
 /* closures assigned to setopt in setopt table */
 static struct {
   const char *name;
@@ -235,6 +248,8 @@ static struct {
   {P"ssl_sessionid_cache", CURLOPT_SSL_SESSIONID_CACHE, l_easy_setopt_long},
 #endif
   /* not implemented:   {P"krblevel", CURLOPT_KRBLEVEL, l_easy_setopt_string}, */
+  /* other options */
+  {P"share", CURLOPT_SHARE, l_easy_setopt_share},
   /* dummy opt value */
   {NULL, CURLOPT_VERBOSE, NULL}};	
 

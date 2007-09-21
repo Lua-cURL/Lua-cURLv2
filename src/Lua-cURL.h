@@ -35,6 +35,7 @@
 /* custom metatables */
 #define LUACURL_EASYMETATABLE "CURL.easy"
 #define LUACURL_MULTIMETATABLE "CURL.multi"
+#define LUACURL_SHAREMETATABLE "CURL.shared"
 #define LUACURL_REGISTRYPREFIX "Lua-cURL_private"
 
 #define MULTIREGISTRY_KEY "_LUA_CURL"
@@ -77,6 +78,12 @@ int l_multi_init (lua_State *L);
 int l_multi_add_handle (lua_State *L);
 int l_multi_perform (lua_State *L);
 int l_multi_gc (lua_State *L);
+
+/* shared interface */
+int l_share_init (lua_State *L);
+int l_share_setopt_share(lua_State *L);
+int l_share_gc (lua_State *L);
+
 /* subtable creation */
 int l_easy_getinfo_register (lua_State *L);
 int l_easy_setopt_register (lua_State *L);
