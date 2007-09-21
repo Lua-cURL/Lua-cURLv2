@@ -1,4 +1,3 @@
-memoryleak in lua_setopt_strings
 splitup: easy/mutli sourcecode
 multi: garbagecollect callbackdata
 

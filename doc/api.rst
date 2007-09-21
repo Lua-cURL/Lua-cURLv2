@@ -4,7 +4,7 @@ Lua-cURL
 
 :Author: Jürgen Hötzel
 :Contact: http://www.hoetzel.info/
-:Date: $Date: 2007/09/20 20:49:36 $
+:Date: $Date: 2007/09/21 16:52:59 $
 :Copyright: This document has been placed in the public domain.
 
 .. contents::
@@ -26,11 +26,6 @@ The intent of Lua-cURL is to adapt the
 of libcurl_ to the functionality of Lua (for example by using iterators instead of callbacks when possible).
 
 .. _libcurl: http://curl.haxx.se/libcurl/c/
-
-Warning
-..................
-This release is a snapshot of development code. Although it is buildable and
-usable, it is far from complete and  primarily intended for testing and hacking purposes. 
 
 Installation
 ------------------
@@ -64,6 +59,7 @@ Easy interface
    * **easy:setopt_url(string)**
    * **easy:setopt_verbose(number)**
    * **easy:setopt_proxytype(string)**
+   * **easy:setopt_share(share)**  (See: share_)
    * ...
 
 **easy:perform(table)**
@@ -133,6 +129,23 @@ Example 1: "On-The-Fly" XML parsing
 .. include:: ../examples/rss.lua
    :literal:
 
+Share interface
+--------------------
+.. _share:
+
+**cURL.share_init()** 
+  returns a new share handle
+
+**share:setopt_share(string)**
+  specifies the type of data that should be shared ("DNS" or "COOKIE")
+
+Since Lua is single-threaded, there is no mapping for the lock options.
+
+Example 1: Share Cookie date across easy handles
+................................................
+
+.. include:: ../examples/share.lua
+   :literal:
 
 
 Appendix

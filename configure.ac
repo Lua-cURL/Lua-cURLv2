@@ -1,4 +1,4 @@
-AC_INIT([Lua-cURL],[0.1])
+AC_INIT([Lua-cURL],[0.2])
 AM_INIT_AUTOMAKE
 AC_PROG_CC
 dnl libtool magic 
