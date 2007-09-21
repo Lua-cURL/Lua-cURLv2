@@ -44,9 +44,17 @@
 #define LUACURL_OPTIONP_UPVALUE(L, INDEX) ((CURLoption *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 #define LUACURL_INFOP_UPVALUE(L, INDEX) ((CURLINFO *) lua_touserdata(L, lua_upvalueindex(INDEX)))
 
+typedef struct l_option_slist {
+    CURLoption option;
+    struct curl_slist *slist;
+} l_option_slist;
+
 typedef struct l_easy_private {
   CURL *curl; 
   char error[CURL_ERROR_SIZE];
+  
+  /* slists, allocated by l_easy_setopt_strings */
+  l_option_slist *option_slists;
 } l_easy_private;
 
 /* Lua closures (CURL* upvalue) */
@@ -73,6 +81,10 @@ int l_multi_gc (lua_State *L);
 int l_easy_getinfo_register (lua_State *L);
 int l_easy_setopt_register (lua_State *L);
 int l_easy_callback_newtable(lua_State *L);
+
+/* init private list of curl_slists */
+void  l_easy_setopt_init_slists(lua_State *L, l_easy_private *privp);
+void l_easy_setopt_free_slists(l_easy_private *privp);
 
 /* setup callback function */
 int l_easy_setup_writefunction(lua_State *L, CURL* curl);

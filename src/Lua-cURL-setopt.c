@@ -50,28 +50,61 @@ static int l_easy_setopt_string(lua_State *L) {
   return 0;
 }
 
+void l_easy_setopt_free_slist(l_easy_private *privp, CURLoption option) {
+  int i = 0;
+
+  while (privp->option_slists[i].option != 0) {
+    if (privp->option_slists[i].option == option) {
+      /* free existing slist for this option */  
+      if (privp->option_slists[i].slist != NULL) {
+	curl_slist_free_all(privp->option_slists[i].slist);
+	privp->option_slists[i].slist = NULL;
+      }
+      break;
+    }
+    i++;
+  }
+}
+
+struct curl_slist**  l_easy_setopt_get_slist(l_easy_private *privp, CURLoption option) {
+ int i = 0;
+ 
+ while (privp->option_slists[i].option != 0) {
+   if (privp->option_slists[i].option == option) 
+     return &(privp->option_slists[i].slist);
+   i++;
+ }
+ return NULL;
+}
+
 static int l_easy_setopt_strings(lua_State *L) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   CURL *curl = privatep->curl;
   CURLoption *optionp = LUACURL_OPTIONP_UPVALUE(L, 1);
   struct curl_slist *headerlist = NULL;
   int i = 1;
+
+  /* free previous slist for this option */
+  l_easy_setopt_free_slist(privatep, *optionp);
+
   if (lua_isstring(L, 2)) 
-    headerlist = curl_slist_append(headerlist, lua_tostring(L, 2));
+    *l_easy_setopt_get_slist(privatep, *optionp) = curl_slist_append(headerlist, lua_tostring(L, 2));
   else {
     if (lua_type(L, 2) != LUA_TTABLE)
       luaL_error(L, "wrong argument (%s): expected string or table", lua_typename(L, 2));
     
     lua_rawgeti(L, 2, i++);
     while (!lua_isnil(L, -1)) {
-      headerlist = curl_slist_append(headerlist, lua_tostring(L, -1));
+      struct curl_slist *current_slist = *l_easy_setopt_get_slist(privatep, *optionp);
+      struct curl_slist *new_slist = curl_slist_append(current_slist, lua_tostring(L, -1));
+      *l_easy_setopt_get_slist(privatep, *optionp) = new_slist;
       lua_pop(L, 1);
       lua_rawgeti(L, 2, i++);
     } 
     lua_pop(L, 1);
   }
 
-  if (curl_easy_setopt(curl, *optionp, headerlist) != CURLE_OK)
+  if (curl_easy_setopt(curl, *optionp, *l_easy_setopt_get_slist(privatep, *optionp)) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);  
   /* memory leak: we need to free this in __gc */
   /*   curl_slist_free_all(headerlist);  */
@@ -219,4 +252,39 @@ int l_easy_setopt_register(lua_State *L) {
   return 0;
 }
 
+void  l_easy_setopt_init_slists(lua_State *L, l_easy_private *privp) {
+  int i, n;
 
+  /* count required slists */
+  for (i=0, n=0; luacurl_setopt_c[i].name != NULL; i++) 
+    if (luacurl_setopt_c[i].func == l_easy_setopt_strings) n++;
+  
+  privp->option_slists = (l_option_slist*) malloc(sizeof(l_option_slist) * ++n);
+  if (privp->option_slists == NULL)
+    luaL_error(L, "can't malloc option slists");
+
+  /* Init slists */
+  for (i=0, n=0; luacurl_setopt_c[i].name != NULL; i++) {
+    CURLoption option = luacurl_setopt_c[i].option;
+    if (luacurl_setopt_c[i].func == l_easy_setopt_strings) {
+      privp->option_slists[n].option = option;
+      privp->option_slists[n].slist = NULL;
+      n++;
+    }
+  }
+  /* term list */
+  privp->option_slists[n].option = 0;
+  privp->option_slists[n].slist = NULL;
+}
+
+void  l_easy_setopt_free_slists(l_easy_private *privp) {
+  int i = 0;
+  
+  while (privp->option_slists[i].option != 0) {
+    if (privp->option_slists[i].slist != NULL) 
+      curl_slist_free_all(privp->option_slists[i].slist);
+    i++;
+  }
+
+  free(privp->option_slists);
+}

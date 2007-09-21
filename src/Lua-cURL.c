@@ -126,6 +126,10 @@ int l_easy_init(lua_State *L) {
   
   /* create userdata and assign metatable */
   privp = (l_easy_private *) lua_newuserdata(L, sizeof(l_easy_private));
+
+  /* allocate list of curl_slist for setopt handling */
+  l_easy_setopt_init_slists(L, privp);  
+  
   luaL_getmetatable(L, LUACURL_EASYMETATABLE);
   lua_setmetatable(L, - 2);
 
@@ -277,6 +281,7 @@ int l_easy_gc(lua_State *L) {
   /* gc resources optained by cURL userdata */
   l_easy_private *privp = lua_touserdata(L, 1);
   curl_easy_cleanup(privp->curl);
+  l_easy_setopt_free_slists(privp);
   return 0;
 }
 
