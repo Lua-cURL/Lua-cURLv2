@@ -1,0 +1,5 @@
+2007-09-21  Juergen Hoetzel  <juergen@hoetzel.info>
+
+	* Lua-cURL.h, Lua-cURL-setopt.c, Lua-cURL.c:
+	fixed memoryleak in lua_setopt_strings
+
