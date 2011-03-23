@@ -170,11 +170,11 @@ static struct {
   {P"maxredirs", CURLOPT_MAXREDIRS, l_easy_setopt_long},
   /* not implemented */
   /*   {P"put", CURLOPT_PUT, l_easy_setopt_long}, */
-  /*   {P"post", CURLOPT_POST, l_easy_setopt_long}, */
-  /*   {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_long}, */
-  /*   {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long}, */
-  /*   {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long}, */
-  /*   {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long}, */
+  {P"post", CURLOPT_POST, l_easy_setopt_long},
+  {P"postfields", CURLOPT_POSTFIELDS, l_easy_setopt_string},
+  {P"postfieldsize", CURLOPT_POSTFIELDSIZE, l_easy_setopt_long},
+  {P"postfieldsize_LARGE", CURLOPT_POSTFIELDSIZE_LARGE, l_easy_setopt_long}, 
+  {P"httppost", CURLOPT_HTTPPOST, l_easy_setopt_long},
   {P"referer", CURLOPT_REFERER, l_easy_setopt_string},
   {P"useragent", CURLOPT_USERAGENT, l_easy_setopt_string},
   {P"httpheader", CURLOPT_HTTPHEADER, l_easy_setopt_strings}, 

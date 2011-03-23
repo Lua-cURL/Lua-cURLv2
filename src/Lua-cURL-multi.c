@@ -22,7 +22,11 @@
 ******************************************************************************/
 
 #include <stdlib.h>		/* malloc */
+#ifndef __WIN32__
 #include <sys/select.h>		/* select */
+#else 
+#include <winsock2.h>
+#endif
 #include <string.h>		/* strerror */
 #include <errno.h>
 
