@@ -156,7 +156,7 @@ static struct {
   /* behavior options */
   {P"verbose", CURLOPT_VERBOSE, l_easy_setopt_long},
   {P"header", CURLOPT_HEADER, l_easy_setopt_long},
-  {P"noprogrss", CURLOPT_NOPROGRESS, l_easy_setopt_long},
+  {P"noprogress", CURLOPT_NOPROGRESS, l_easy_setopt_long},
   {P"nosignal", CURLOPT_NOSIGNAL, l_easy_setopt_long},
   /* callback options */
   /* network options */
@@ -215,6 +215,8 @@ static struct {
   /* network options */
   {P"url", CURLOPT_URL, l_easy_setopt_string},
   {P"proxy", CURLOPT_PROXY, l_easy_setopt_string},
+  {P"userpwd", CURLOPT_USERPWD, l_easy_setopt_string},
+  {P"proxyuserpwd", CURLOPT_PROXYUSERPWD, l_easy_setopt_string},
   {P"proxyport", CURLOPT_PROXYPORT, l_easy_setopt_long},
   {P"proxytype", CURLOPT_PROXYTYPE, l_easy_setopt_proxytype},
   {P"httpproxytunnel", CURLOPT_HTTPPROXYTUNNEL, l_easy_setopt_long},
