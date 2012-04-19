@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>Lua-cURL by msva</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Lua-cURL</h1>
+        <h2>Lua-cURL is aiming for a full-fledged libcurl binding (easy/multi/share interface) to the functionality of Lua</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/msva/lua-curl/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/msva/lua-curl/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/msva/lua-curl" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <table frame="void" rules="none">
+<tr>
+<th>Previous (original) Author:</th>
+<td>Jürgen Hötzel</td>
+</tr>
+<tr>
+<th>Current Author:</th>
+<td>Vadim A. Misbakh-Soloviov</td>
+</tr>
+<tr>
+<th>Contact:</th>
+<td><a href="http://mva.name/">http://mva.name/</a></td>
+</tr>
+</table> 
+<p><a name="contents">Contents</a></p>
+<ul>
+<li><a href="#introduction" name="id1">Introduction</a></li>
+<li><a href="#installation" name="id2">Installation</a></li>
+<li>
+<a href="#easy-interface" name="id3">Easy interface</a><ul>
+<li><a href="#example-1-fetch-the-example-com-homepage" name="id4">Example 1: Fetch the example.com homepage</a></li>
+<li><a href="#example-2-on-the-fly-file-upload" name="id5">Example 2: "On-The-Fly" file upload</a></li>
+<li><a href="#example-3-posting-data" name="id6">Example 3: "Posting" data</a></li>
+</ul>
+</li>
+<li>
+<a href="#multi-interface" name="id7">Multi interface</a><ul>
+<li><a href="#example-1-on-the-fly-xml-parsing" name="id8">Example 1: "On-The-Fly" XML parsing</a></li>
+</ul>
+</li>
+<li>
+<a href="#share-interface" name="id9">Share interface</a><ul>
+<li><a href="#example-1-share-cookie-date-across-easy-handles" name="id10">Example 1: Share Cookie date across easy handles</a></li>
+</ul>
+</li>
+<li>
+<a href="#appendix" name="id11">Appendix</a><ul>
+<li><a href="#using-ssl" name="id12">Using SSL</a></li>
+</ul>
+</li>
+</ul> 
+
+ 
+<h1><a href="#id1" name="introduction">Introduction</a></h1>
+<p>This project is <strong>not</strong> a fork of <a href="http://luaforge.net/projects/luacurl/">LuaCURL</a>, which is a direct mapping of parts of the <a href="http://curl.haxx.se/libcurl/c/libcurl-easy.html">libcurl-easy</a> interface.</p>
+<p>The intent of Lua-cURL is to adapt the</p>
+<ul>
+<li>Easy Interface</li>
+<li>Multi Interface</li>
+<li>Shared Interface</li>
+</ul><p>of <a href="http://curl.haxx.se/libcurl/c/">libcurl</a> to the functionality of Lua (for example by using iterators instead of callbacks when possible).</p>
+ 
+
+ 
+<h1><a href="#id2" name="installation">Installation</a></h1>
+<p>The Autotools chain is used to configure, build and install. Just invoke:</p>
+<pre>
+<code>
+./configure &amp;&amp; make install
+</code>
+</pre>
+<p>If your Lua installation doesn't contain pkg-config support, you have to specify compiler/linker flags and the target directory:</p>
+<pre>
+<code>
+export LUA_CFLAGS="-I/usr/local/include"
+export LUA_LIBS="-L/usr/local/lib -lm -llua"
+./configure  --with-cmoddir=/usr/local/lib/lua/5.1
+</code>
+</pre>
+ 
+
+ 
+<h1><a href="#id3" name="easy-interface">Easy interface</a></h1>
+<dl>
+<dt><strong>cURL.easy_init()</strong></dt>
+<dd>returns a new easy handle.</dd>
+<dt><strong>cURL.version_info()</strong></dt>
+<dd>returns a table containing version info and features/protocols sub table</dd>
+<dt><strong>easy:escape(string)</strong></dt>
+<dd>return URL encoded string</dd>
+<dt><strong>easy:unescape(string)</strong></dt>
+<dd>return URL decoded string</dd>
+<dt><strong>easy:setopt*(value)</strong></dt>
+<dd><dl>
+<dt>libcurl properties an options are mapped to individual functions:</dt>
+<dd><ul>
+<li><strong>easy:setopt_url(string)</strong></li>
+<li><strong>easy:setopt_verbose(number)</strong></li>
+<li><strong>easy:setopt_proxytype(string)</strong></li>
+<li>
+<strong>easy:setopt_share(share)</strong>  (See: <a href="#share">share</a>)</li>
+<li>...</li>
+</ul></dd>
+</dl></dd>
+<dt><strong>easy:perform(table)</strong></dt>
+<dd><dl>
+<dt>Perform the transfer as described in the options, using an optional callback table.The callback table indices are named after the equivalent cURL callbacks:</dt>
+<dd><ul>
+<li><strong>writefunction = function(str)</strong></li>
+<li><strong>readfunction = function()</strong></li>
+<li><strong>headerfunction = function(str)</strong></li>
+</ul></dd>
+</dl></dd>
+<dt><strong>easy:post(table)</strong></dt>
+<dd>
+<p>Prepare a multipart/formdata post. The table indices are named after the form fields and should map to string values:</p>
+<pre>
+{field1 = value1,
+ field2 = value1}
+</pre>
+<p>or more generic descriptions in tables:</p>
+<pre>
+{field1 = {file="/tmp/test.txt",
+           type="text/plain"},
+{field2 = {file="dummy.html",
+           data="&lt;html&gt;&lt;bold&gt;bold&lt;/bold&gt;&lt;/html&gt;,
+           type="text/html"}}
+</pre>
+</dd>
+</dl> 
+<h2><a href="#id4" name="example-1-fetch-the-example-com-homepage">Example 1: Fetch the example.com homepage</a></h2>
+<pre>
+require("cURL")
+
+-- open output file
+f = io.open("example_homepage", "w")
+
+c = cURL.easy_init()
+-- setup url
+c:setopt_url("<a href="http://www.example.com/&quot;">http://www.example.com/"</a>)
+-- perform, invokes callbacks
+c:perform({writefunction = function(str)
+                f:write(str)
+                 end})
+
+-- close output file
+f:close()
+print("Done")
+</pre>
+ 
+
+ 
+<h2><a href="#id5" name="example-2-on-the-fly-file-upload">Example 2: "On-The-Fly" file upload</a></h2>
+<pre>
+-- simple "On the fly" fileupload
+
+require("cURL")
+
+c=cURL.easy_init()
+c:setopt_url("ftp://ftptest:secret0815@targethost/file.dat")
+c:setopt_upload(1)
+count=0
+c:perform({readfunction=function(n)
+               count = count + 1
+               if (count &lt; 10)  then
+                  return "Line " .. count .. "\n"
+               end
+               return nil
+            end})
+print("Fileupload done")
+</pre>
+ 
+
+ 
+<h2><a href="#id6" name="example-3-posting-data">Example 3: "Posting" data</a></h2>
+<pre>
+require("cURL")
+
+c = cURL.easy_init()
+
+c:setopt_url("http://localhost")
+postdata = {
+   -- post file from filesystem
+   name = {file="post.lua",
+       type="text/plain"},
+   -- post file from data variable
+   name2 = {file="dummy.html",
+        data="&lt;html&gt;&lt;bold&gt;bold&lt;/bold&gt;&lt;/html&gt;",
+        type="text/html"}}
+c:post(postdata)
+c:perform()
+
+print("Done")
+</pre>
+ 
+
+<p></p> 
+
+ 
+<h1><a href="#id7" name="multi-interface">Multi interface</a></h1>
+<dl>
+<dt><strong>cURL.multi_init()</strong></dt>
+<dd>returns a new multi handle</dd>
+<dt><strong>multi:add_handle(easy)</strong></dt>
+<dd>add an easy handle to a multi session</dd>
+<dt><strong>multi:perform()</strong></dt>
+<dd>
+<p>returns an iterator function that, each time it is called, returns the next data, type and corresponding easy handle:</p>
+<blockquote>
+<dl>
+<dt>
+<strong>data</strong>:</dt>
+<dd>data returned by the cURL library</dd>
+<dt><strong>type</strong></dt>
+<dd>type of data returned ("header" or "data")</dd>
+<dt><strong>easy</strong></dt>
+<dd>corresponding easy handle of the data returned</dd>
+</dl>
+</blockquote>
+</dd>
+</dl> 
+<h2><a href="#id8" name="example-1-on-the-fly-xml-parsing">Example 1: "On-The-Fly" XML parsing</a></h2>
+<pre>
+-- use LuaExpat and Lua-CuRL together for On-The-Fly XML parsing
+require("lxp")
+require("cURL")
+
+tags = {}
+items = {}
+
+callback = {}
+
+function callback.StartElement(parser, tagname)
+   tags[#tags + 1] = tagname
+   if (tagname == "item") then
+      items[#items + 1] = {}
+   end
+end
+
+function callback.CharacterData(parser, str)
+   if (tags[#tags -1] == "item") then
+      --we are parsing a item, get rid of trailing whitespace
+      items[#items][tags[#tags]] = string.gsub(str, "%s*$", "")
+   end
+end
+function callback.EndElement(parser, tagname)
+   --assuming well formed xml
+   tags[#tags] = nil
+end
+
+p = lxp.new(callback)
+
+-- create and setup easy handle
+c = cURL.easy_init()
+c:setopt_url("<a href="http://www.lua.org/news.rss&quot;">http://www.lua.org/news.rss"</a>)
+
+m = cURL.multi_init()
+m:add_handle(c)
+
+for data,type in m:perform() do
+   -- ign "header"
+   if (type == "data") then
+      assert(p:parse(data))
+   end
+end
+
+--finish document
+assert(p:parse())
+p:close()
+
+for i, item in ipairs(items) do
+   for k, v in pairs(item) do
+      print(k,v)
+   end
+   print()
+end
+</pre>
+ 
+
+<p></p> 
+
+ 
+<h1><a href="#id9" name="share-interface">Share interface</a></h1>
+<dl>
+<dt><strong>cURL.share_init()</strong></dt>
+<dd>returns a new share handle</dd>
+<dt><strong>share:setopt_share(string)</strong></dt>
+<dd>specifies the type of data that should be shared ("DNS" or "COOKIE")</dd>
+</dl><p>Since Lua is single-threaded, there is no mapping for the lock options.</p>
+ 
+<h2><a href="#id10" name="example-1-share-cookie-date-across-easy-handles">Example 1: Share Cookie date across easy handles</a></h2>
+<pre>
+-- Cookie data will be shared across the easy handles to do an authorized download
+require("cURL")
+
+-- create share handle (share COOKIE and DNS Cache)
+s = cURL.share_init()
+s:setopt_share("COOKIE")
+s:setopt_share("DNS")
+
+-- create first easy handle to do the login
+c = cURL.easy_init()
+c:setopt_share(s)
+c:setopt_url("http://targethost/login.php?username=foo&amp;password=bar")
+
+-- create second easy handle to do the download
+c2 = cURL.easy_init()
+c2:setopt_share(s)
+c2:setopt_url("http://targethost/download.php?id=test")
+
+--login
+c:perform()
+
+--download
+c2:perform()
+</pre>
+ 
+
+ 
+<h1><a href="#id11" name="appendix">Appendix</a></h1>
+ 
+<h2><a href="#id12" name="using-ssl">Using SSL</a></h2>
+<p>The cert bundle distributed with cURL may be out of date and cannot validate many certificates. You can supply a different
+PEM cert bundle by using <strong>easy:setopt_cainfo(string)</strong>.
+Also, it is a shell script, writen by original author (Jürgen), that can be used for converting the cacert keystore distributed with the Java Runtime Environment to PEM. This script currently distributed in «examples» folder in repository</p>
+ 
+
+<p></p> 
+ 
+      </section>
+    </div>
+
+    
+  </body>
+</html>
