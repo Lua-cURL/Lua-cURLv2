@@ -41,7 +41,7 @@
 <th>Contact:</th>
 <td><a href="http://mva.name/">http://mva.name/</a></td>
 </tr>
-</table> 
+</table>
 <p><a name="contents">Contents</a></p>
 <ul>
 <li><a href="#introduction" name="id1">Introduction</a></li>
@@ -68,9 +68,9 @@
 <li><a href="#using-ssl" name="id12">Using SSL</a></li>
 </ul>
 </li>
-</ul> 
+</ul>
 
- 
+
 <h1><a href="#id1" name="introduction">Introduction</a></h1>
 <p>This project is <strong>not</strong> a fork of <a href="http://luaforge.net/projects/luacurl/">LuaCURL</a>, which is a direct mapping of parts of the <a href="http://curl.haxx.se/libcurl/c/libcurl-easy.html">libcurl-easy</a> interface.</p>
 <p>The intent of Lua-cURL is to adapt the</p>
@@ -79,27 +79,23 @@
 <li>Multi Interface</li>
 <li>Shared Interface</li>
 </ul><p>of <a href="http://curl.haxx.se/libcurl/c/">libcurl</a> to the functionality of Lua (for example by using iterators instead of callbacks when possible).</p>
- 
 
- 
+
+
 <h1><a href="#id2" name="installation">Installation</a></h1>
 <p>The Autotools chain is used to configure, build and install. Just invoke:</p>
 <pre>
-<code>
 ./configure &amp;&amp; make install
-</code>
 </pre>
 <p>If your Lua installation doesn't contain pkg-config support, you have to specify compiler/linker flags and the target directory:</p>
 <pre>
-<code>
 export LUA_CFLAGS="-I/usr/local/include"
 export LUA_LIBS="-L/usr/local/lib -lm -llua"
 ./configure  --with-cmoddir=/usr/local/lib/lua/5.1
-</code>
 </pre>
- 
 
- 
+
+
 <h1><a href="#id3" name="easy-interface">Easy interface</a></h1>
 <dl>
 <dt><strong>cURL.easy_init()</strong></dt>
@@ -147,7 +143,7 @@ export LUA_LIBS="-L/usr/local/lib -lm -llua"
            type="text/html"}}
 </pre>
 </dd>
-</dl> 
+</dl>
 <h2><a href="#id4" name="example-1-fetch-the-example-com-homepage">Example 1: Fetch the example.com homepage</a></h2>
 <pre>
 require("cURL")
@@ -167,9 +163,9 @@ c:perform({writefunction = function(str)
 f:close()
 print("Done")
 </pre>
- 
 
- 
+
+
 <h2><a href="#id5" name="example-2-on-the-fly-file-upload">Example 2: "On-The-Fly" file upload</a></h2>
 <pre>
 -- simple "On the fly" fileupload
@@ -189,9 +185,9 @@ c:perform({readfunction=function(n)
             end})
 print("Fileupload done")
 </pre>
- 
 
- 
+
+
 <h2><a href="#id6" name="example-3-posting-data">Example 3: "Posting" data</a></h2>
 <pre>
 require("cURL")
@@ -212,11 +208,11 @@ c:perform()
 
 print("Done")
 </pre>
- 
 
-<p></p> 
 
- 
+<p></p>
+
+
 <h1><a href="#id7" name="multi-interface">Multi interface</a></h1>
 <dl>
 <dt><strong>cURL.multi_init()</strong></dt>
@@ -238,7 +234,7 @@ print("Done")
 </dl>
 </blockquote>
 </dd>
-</dl> 
+</dl>
 <h2><a href="#id8" name="example-1-on-the-fly-xml-parsing">Example 1: "On-The-Fly" XML parsing</a></h2>
 <pre>
 -- use LuaExpat and Lua-CuRL together for On-The-Fly XML parsing
@@ -295,11 +291,11 @@ for i, item in ipairs(items) do
    print()
 end
 </pre>
- 
 
-<p></p> 
 
- 
+<p></p>
+
+
 <h1><a href="#id9" name="share-interface">Share interface</a></h1>
 <dl>
 <dt><strong>cURL.share_init()</strong></dt>
@@ -307,7 +303,7 @@ end
 <dt><strong>share:setopt_share(string)</strong></dt>
 <dd>specifies the type of data that should be shared ("DNS" or "COOKIE")</dd>
 </dl><p>Since Lua is single-threaded, there is no mapping for the lock options.</p>
- 
+
 <h2><a href="#id10" name="example-1-share-cookie-date-across-easy-handles">Example 1: Share Cookie date across easy handles</a></h2>
 <pre>
 -- Cookie data will be shared across the easy handles to do an authorized download
@@ -334,22 +330,22 @@ c:perform()
 --download
 c2:perform()
 </pre>
- 
 
- 
+
+
 <h1><a href="#id11" name="appendix">Appendix</a></h1>
- 
+
 <h2><a href="#id12" name="using-ssl">Using SSL</a></h2>
 <p>The cert bundle distributed with cURL may be out of date and cannot validate many certificates. You can supply a different
 PEM cert bundle by using <strong>easy:setopt_cainfo(string)</strong>.
 Also, it is a shell script, writen by original author (Jürgen), that can be used for converting the cacert keystore distributed with the Java Runtime Environment to PEM. This script currently distributed in «examples» folder in repository</p>
- 
 
-<p></p> 
- 
+
+<p></p>
+
       </section>
     </div>
 
-    
+
   </body>
 </html>
