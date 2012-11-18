@@ -298,7 +298,11 @@ int luaopen_cURL(lua_State *L) {
   luaL_newmetatable(L, LUACURL_EASYMETATABLE);
 
   /* register in easymetatable */
+#if LUA_VERSION_NUM < 502
   luaL_register(L, NULL, luacurl_easy_m);
+#else
+  luaL_setfuncs(L, luacurl_easy_m, 0);
+#endif
 
   /* easymetatable.__index = easymetatable */
   lua_pushvalue(L, -1);
@@ -313,7 +317,11 @@ int luaopen_cURL(lua_State *L) {
   luaL_newmetatable(L, LUACURL_SHAREMETATABLE);
 
   /* register in sharemetatable */
+#if LUA_VERSION_NUM < 502
   luaL_register(L, NULL, luacurl_share_m);
+#else
+  luaL_setfuncs(L, luacurl_share_m, 0);
+#endif
 
   /* sharemetatable.__index = sharemetatable */
   lua_pushvalue(L, -1);
@@ -321,7 +329,11 @@ int luaopen_cURL(lua_State *L) {
 
   /* MULTI START */
   luaL_newmetatable(L, LUACURL_MULTIMETATABLE);
+#if LUA_VERSION_NUM < 502
   luaL_register(L, NULL, luacurl_multi_m);
+#else
+  luaL_setfuncs(L, luacurl_multi_m, 0);
+#endif
     /* multemetatable.__index = multimetatable */
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
@@ -334,7 +346,11 @@ int luaopen_cURL(lua_State *L) {
 
 
   /* return module functions */
+#if LUA_VERSION_NUM < 502
   luaL_register(L, "cURL", luacurl_f);
+#else
+  luaL_newlib(L, luacurl_f);
+#endif
 
   /* initialize curl once */
   if ((rc = curl_global_init(CURL_GLOBAL_ALL)) != CURLE_OK)
