@@ -1,4 +1,4 @@
-AC_INIT([Lua-cURL],[0.2.1])
+AC_INIT([Lua-cURL],[0.2.2])
 AM_INIT_AUTOMAKE
 AC_PROG_CC
 dnl libtool magic
@@ -6,6 +6,7 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
 PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES(LUA, lua, luajit)
 PKG_CHECK_MODULES(CURL, libcurl)
 
 AC_ARG_WITH(cmoddir,
