@@ -1,4 +1,0 @@
-This is the cURL layer module for Lua and LuaJIT.
-
-Unfortunately, I don't like autotools, so I can't fix it to work as needed (see #1 and #2).
-And, more of that, currently I have no time to change buildsystem, so any help in that way is appreciated.

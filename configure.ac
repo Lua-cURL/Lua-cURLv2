@@ -1,4 +1,5 @@
 AC_INIT([Lua-cURL],[0.2.2])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 AC_PROG_CC
 dnl libtool magic
