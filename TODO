@@ -1,4 +1,4 @@
-buildsys: autocrap => trash
+FFI: optional FFI (LuaJIT) support
 
 splitup: easy/mutli sourcecode
 multi: garbagecollect callbackdata
