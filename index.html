@@ -89,14 +89,22 @@ cmake ${CMAKE_ARGUMENTS} . &amp;&amp; make ${MAKE_ARGUMENTS} install
 </pre>
 <p>Where <code>CMAKE_ARGUMENTS</code> may contain one or all of the following (in one space-delimited string or bash's array, without comments):</p>
 <pre>
--DCMAKE_C_FLAGS="-flto" # to use LTO (Link-Time Optimisations). Requires GCC>=4.6
--DUSE_LUAJIT=ON # to use LuaJIT includes instead of 'C' Lua library. Requires LuaJIT>=2.0
--DCMAKE_LINKER="/usr/bin/ld.gold" # To use 'gold' linker. Requires newer binutils.
+-DCMAKE_C_FLAGS="-flto"
+# to use LTO (Link-Time Optimisations). Requires GCC>=4.6
+
+-DUSE_LUAJIT=ON
+# to use LuaJIT includes instead of 'C' Lua library. Requires LuaJIT>=2.0
+
+-DCMAKE_LINKER="/usr/bin/ld.gold"
+# To use 'gold' linker. Requires newer binutils.
 </pre>
 <p>And <code>MAKE_ARGUMENTS</code> may also contain one or all of the following (in one space-delimited string or bash's array, without comments):</p>
 <pre>
--jN # Where N = Number of processor cores * Number of processors + 1, to build in N threads, to speedup compilation (by default, -j1)
-DESTDIR="<PATH>" # Where <PATH> can be either absolute or relative prefix-path to the place, you want to install Lua-cURL (by default, DESTDIR=/)
+-jN
+# Where N = Number of processor cores * Number of processors + 1, to build in N threads, to speedup compilation (by default, -j1)
+
+DESTDIR="<PATH>"
+# Where <PATH> can be either absolute or relative prefix-path to the place, you want to install Lua-cURL (by default, DESTDIR=/)
 </pre>
 
 
