@@ -84,7 +84,7 @@ int l_multi_init(lua_State *L) {
   return 1;
 }
 
-static int l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *stream) {
+static size_t l_multi_internalcallback(void *ptr, size_t size, size_t nmemb, void *stream) {
   l_multi_callbackdata *callbackdata = (l_multi_callbackdata*) stream;
   /* append data */
   lua_State *L = callbackdata->L;

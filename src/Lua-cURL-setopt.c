@@ -21,6 +21,9 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************************/
 
+/* free() */
+#include <stdlib.h>
+
 #include <string.h>
 
 #include "Lua-cURL.h"
