@@ -29,10 +29,8 @@ set(SRC
 
 if(USE_LUAJIT)
 	find_package(LuaJIT REQUIRED)
-	unset(USE_LUA52)
-	set(USE_LUA51 OFF)
-	set(LUA_INCLUDE_DIR ${LUAJIT_INCLUDE_DIR})
-	set(LUA_LIBRARY ${LUAJIT_LIBRARY})
+	set(USE_LUA52 OFF)
+	set(USE_LUA OFF)
 endif()
 
 #if(USE_LUA52)
@@ -41,15 +39,15 @@ endif()
 #	unset(USE_LUA)
 #endif()
 
-#if(USE_LUA)
-#	find_package(Lua51 REQUIRED)
-#endif()
+if(USE_LUA)
+	find_package(Lua51 REQUIRED)
+endif()
 
 
 find_package(CURL REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
 
-set(_MODULE_LINK "${CMAKE_THREAD_LIBS_INIT}")
+set(_MODULE_LINK "${CURL_LIBRARY}")
 get_filename_component(_lua_lib_dir ${LUA_LIBRARY} PATH)
 
 if(APPLE)
