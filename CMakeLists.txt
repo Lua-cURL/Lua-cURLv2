@@ -3,7 +3,7 @@ project(Lua-cURL C)
 cmake_minimum_required(VERSION 2.6)
 
 option(USE_LUA "Use Lua (also called 'C' Lua) version 5.1 includes (default)" ON)
-#option(USE_LUA52 "Use Lua (also called 'C' Lua) version 5.2 includes (currelty unsopported)")
+#option(USE_LUA52 "Use Lua (also called 'C' Lua) version 5.2 includes (currelty unsupported)")
 option(USE_LUAJIT "Use LuaJIT includes instead of 'C' Lua ones (recommended, if you're using LuaJIT, but disabled by default)")
 
 
