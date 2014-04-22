@@ -104,20 +104,20 @@ int l_easy_post(lua_State *L) {
         unsigned long length = atol(stream_length);
         rc = (type == NULL)?
              curl_formadd(&post,
-					  &last,
-					  CURLFORM_COPYNAME, "filename",
-					  CURLFORM_FILENAME, file,
-					  CURLFORM_STREAM, L,
-					  CURLFORM_CONTENTSLENGTH, length,
-					  CURLFORM_END):
+                          &last,
+                          CURLFORM_COPYNAME, "filename",
+                          CURLFORM_FILENAME, file,
+                          CURLFORM_STREAM, L,
+                          CURLFORM_CONTENTSLENGTH, length,
+                          CURLFORM_END):
              curl_formadd(&post,
-					  &last,
-					  CURLFORM_COPYNAME, "filenmae",
-					  CURLFORM_FILENAME, file,
-					  CURLFORM_STREAM, L,
-					  CURLFORM_CONTENTSLENGTH, length,
-					  CURLFORM_CONTENTTYPE, type,
-					  CURLFORM_END);
+                          &last,
+                          CURLFORM_COPYNAME, "filenmae",
+                          CURLFORM_FILENAME, file,
+                          CURLFORM_STREAM, L,
+                          CURLFORM_CONTENTSLENGTH, length,
+                          CURLFORM_CONTENTTYPE, type,
+                          CURLFORM_END);
 	  }
       /* data field */
       else if ((file != NULL) && (data != NULL)) {
