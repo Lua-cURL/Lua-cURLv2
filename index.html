@@ -108,6 +108,14 @@ DESTDIR="<PATH>"
 # Where <PATH> can be either absolute or relative prefix-path to the place,
 # where you want to install Lua-cURL (by default, DESTDIR=/)
 </pre>
+<p>On some systems, CMake may fail to include the right lua header files.
+This error can be identified at runtime, after requiring the cURL module, by the
+error message "undefined symbol". In that case the module must be recompiled
+specifying the include path for lua header files. This can be done with the
+LUA_DIR environment variable. E.g. in a posix-compliant shell:</p>
+<pre>
+LUA_DIR="/usr/include/lua5.1" cmake ${CMAKE_ARGUMENTS}
+</pre>
 
 
 
