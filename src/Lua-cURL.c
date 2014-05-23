@@ -128,6 +128,8 @@ int l_easy_perform(lua_State *L) {
   int headerfunction;
   /* do readcallback */
   int readfunction;
+  /* curl_easy_perform return code*/
+  CURLcode perform_status;
 
   /* check optional callback table */
   luaL_opt(L, luaL_checktable, 2, lua_newtable(L));
@@ -155,8 +157,7 @@ int l_easy_perform(lua_State *L) {
 
 
   /* callback table is on top on stack */
-  if (curl_easy_perform(curl) != CURLE_OK)
-    luaL_error(L, "%s", privatep->error);
+  perform_status = curl_easy_perform(curl);
 
   /* unset callback functions */
   if (headerfunction)
@@ -165,6 +166,10 @@ int l_easy_perform(lua_State *L) {
     l_easy_clear_writefunction(L, privatep->curl);
   if (readfunction)
     l_easy_clear_readfunction(L, privatep->curl);
+
+  if (perform_status != CURLE_OK)
+    return luaL_error(L, "%s", privatep->error);
+
   return 0;
 }
 
