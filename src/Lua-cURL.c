@@ -89,6 +89,7 @@ static const struct {
     {"DICT", CURLPROTO_DICT},
     {"FILE", CURLPROTO_FILE},
     {"TFTP", CURLPROTO_TFTP},
+#if LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR > 19
     {"IMAP", CURLPROTO_IMAP},
     {"IMAPS", CURLPROTO_IMAPS},
     {"POP3", CURLPROTO_POP3},
@@ -103,6 +104,7 @@ static const struct {
     {"RTMPS", CURLPROTO_RTMPS},
     {"RTMPTS", CURLPROTO_RTMPTS},
     {"GOPHER", CURLPROTO_GOPHER},
+#endif
     {"ALL", CURLPROTO_ALL},
     {NULL, 0}
 };
