@@ -77,35 +77,87 @@ static const struct {
     char *name;             /* human readable name: used as table index */
     unsigned long value;    /* CURLPROTO_* value */
 } luacurl_protos[] = {
+#ifdef CURLPROTO_HTTP
     {"HTTP", CURLPROTO_HTTP},
+#endif
+#ifdef CURLPROTO_HTTPS
     {"HTTPS", CURLPROTO_HTTPS},
+#endif
+#ifdef CURLPROTO_FTP
     {"FTP", CURLPROTO_FTP},
+#endif
+#ifdef CURLPROTO_FTPS
     {"FTPS", CURLPROTO_FTPS},
+#endif
+#ifdef CURLPROTO_SCP
     {"SCP", CURLPROTO_SCP},
+#endif
+#ifdef CURLPROTO_SFTP
     {"SFTP", CURLPROTO_SFTP},
+#endif
+#ifdef CURLPROTO_TELNET
     {"TELNET", CURLPROTO_TELNET},
+#endif
+#ifdef CURLPROTO_LDAP
     {"LDAP", CURLPROTO_LDAP},
+#endif
+#ifdef CURLPROTO_LDAPS
     {"LDAPS", CURLPROTO_LDAPS},
+#endif
+#ifdef CURLPROTO_DICT
     {"DICT", CURLPROTO_DICT},
+#endif
+#ifdef CURLPROTO_FILE
     {"FILE", CURLPROTO_FILE},
+#endif
+#ifdef CURLPROTO_TFTP
     {"TFTP", CURLPROTO_TFTP},
-#if LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR > 19
+#endif
+#ifdef CURLPROTO_IMAP
     {"IMAP", CURLPROTO_IMAP},
+#endif
+#ifdef CURLPROTO_IMAPS
     {"IMAPS", CURLPROTO_IMAPS},
+#endif
+#ifdef CURLPROTO_POP3
     {"POP3", CURLPROTO_POP3},
+#endif
+#ifdef CURLPROTO_POP3S
     {"POP3S", CURLPROTO_POP3S},
+#endif
+#ifdef CURLPROTO_SMTP
     {"SMTP", CURLPROTO_SMTP},
+#endif
+#ifdef CURLPROTO_SMTPS
     {"SMTPS", CURLPROTO_SMTPS},
+#endif
+#ifdef CURLPROTO_RTSP
     {"RTSP", CURLPROTO_RTSP},
+#endif
+#ifdef CURLPROTO_RTMP
     {"RTMP", CURLPROTO_RTMP},
+#endif
+#ifdef CURLPROTO_RTMPT
     {"RTMPT", CURLPROTO_RTMPT},
+#endif
+#ifdef CURLPROTO_RTMPE
     {"RTMPE", CURLPROTO_RTMPE},
+#endif
+#ifdef CURLPROTO_RTMPTE
     {"RTMPTE", CURLPROTO_RTMPTE},
+#endif
+#ifdef CURLPROTO_RTMPS
     {"RTMPS", CURLPROTO_RTMPS},
+#endif
+#ifdef CURLPROTO_RTMPTS
     {"RTMPTS", CURLPROTO_RTMPTS},
+#endif
+#ifdef CURLPROTO_GOPHER
     {"GOPHER", CURLPROTO_GOPHER},
 #endif
+#ifdef CURLPROTO_ALL
     {"ALL", CURLPROTO_ALL},
+#endif
     {NULL, 0}
 };
 
