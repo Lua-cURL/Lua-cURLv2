@@ -97,6 +97,9 @@ cmake ${CMAKE_ARGUMENTS} . &amp;&amp; make ${MAKE_ARGUMENTS} install
 
 -DCMAKE_LINKER="/usr/bin/ld.gold"
 # To use 'gold' linker. Requires newer binutils.
+
+-DUSE_LUA52=ON
+# to install for Lua 5.2. Requires Lua>=5.2
 </pre>
 <p>And <code>MAKE_ARGUMENTS</code> may also contain one or all of the following (in one space-delimited string or bash's array, without comments):</p>
 <pre>
