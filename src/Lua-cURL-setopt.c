@@ -254,6 +254,8 @@ static struct {
   {P"protocols", CURLOPT_PROTOCOLS, l_easy_setopt_long},
   {P"redir_protocols", CURLOPT_REDIR_PROTOCOLS, l_easy_setopt_long},
   {P"proxy", CURLOPT_PROXY, l_easy_setopt_string},
+  {P"username", CURLOPT_USERNAME, l_easy_setopt_string},
+  {P"password", CURLOPT_PASSWORD, l_easy_setopt_string},
   {P"userpwd", CURLOPT_USERPWD, l_easy_setopt_string},
   {P"proxyuserpwd", CURLOPT_PROXYUSERPWD, l_easy_setopt_string},
   {P"proxyport", CURLOPT_PROXYPORT, l_easy_setopt_long},
