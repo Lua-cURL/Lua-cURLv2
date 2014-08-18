@@ -98,9 +98,11 @@ void l_easy_setopt_free_slists(l_easy_private *privp);
 int l_easy_setup_writefunction(lua_State *L, CURL* curl);
 int l_easy_setup_headerfunction(lua_State *L, CURL* curl);
 int l_easy_setup_readfunction(lua_State *L, CURL* curl);
+int l_easy_setup_progressfunction(lua_State *L, CURL* curl);
 int l_easy_clear_headerfunction(lua_State *L, CURL* curl);
-int l_easy_clear_writefunction(lua_State *L, CURL* curl);
 int l_easy_clear_readfunction(lua_State *L, CURL* curl);
+int l_easy_clear_writefunction(lua_State *L, CURL* curl);
+int l_easy_clear_progressfunction(lua_State *L, CURL* curl);
 
 /* Lua module functions */
 int l_easy_init (lua_State *L);

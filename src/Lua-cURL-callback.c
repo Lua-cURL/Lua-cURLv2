@@ -60,6 +60,21 @@ static size_t l_easy_headerfunction(void *ptr, size_t size, size_t nmemb, void *
   return nmemb*size;
 }
 
+static int l_easy_progressfunction(void *clientp,   curl_off_t dltotal,   curl_off_t dlnow,   curl_off_t ultotal,   curl_off_t ulnow)
+{
+   lua_State* L = (lua_State*)clientp;
+   int aborted = 0;
+   lua_getfield(L, -1, "progressfunction");
+   lua_pushinteger(L, (lua_Integer)dltotal);
+   lua_pushinteger(L, (lua_Integer)dlnow);
+   lua_pushinteger(L, (lua_Integer)ultotal);
+   lua_pushinteger(L, (lua_Integer)ulnow);
+
+   lua_call(L, 4, 1);
+   aborted = luaL_checkint(L, -1);
+   lua_pop(L,1);
+   return aborted;
+}
 
 int l_easy_setup_writefunction(lua_State *L, CURL* curl) {
     /* Lua State as userdata argument */
@@ -92,6 +107,20 @@ int l_easy_setup_headerfunction(lua_State *L, CURL* curl) {
   return 0;
 }
 
+
+int l_easy_setup_progressfunction(lua_State *L, CURL* curl) {
+   /* Lua State as userdata argument */
+   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+   if (curl_easy_setopt(curl, CURLOPT_XFERINFODATA ,L) != CURLE_OK)
+       luaL_error(L, "%s", privatep->error);
+
+   if (curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, l_easy_progressfunction) != CURLE_OK)
+       luaL_error(L, "%s", privatep->error);
+
+   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0); 
+   return 0;
+}
+
 int l_easy_clear_headerfunction(lua_State *L, CURL* curl) {
   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
   if (curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL) != CURLE_OK)
@@ -117,4 +146,14 @@ int l_easy_clear_readfunction(lua_State *L, CURL* curl) {
   if (curl_easy_setopt(curl, CURLOPT_READDATA, stdin) != CURLE_OK)
     luaL_error(L, "%s", privatep->error);
   return 0;
+}
+
+int l_easy_clear_progressfunction(lua_State *L, CURL* curl) {
+   l_easy_private *privatep = luaL_checkudata(L, 1, LUACURL_EASYMETATABLE);
+   if (curl_easy_setopt(curl, CURLOPT_XFERINFODATA, NULL) != CURLE_OK)
+       luaL_error(L, "%s", privatep->error);
+   if (curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, NULL) != CURLE_OK)
+       luaL_error(L, "%s", privatep->error);
+   curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1); 
+   return 0;
 }

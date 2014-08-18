@@ -182,6 +182,9 @@ int l_easy_perform(lua_State *L) {
   int headerfunction;
   /* do readcallback */
   int readfunction;
+  /* do progresscallback */
+  int progressfunction;
+
   /* curl_easy_perform return code*/
   CURLcode perform_status;
 
@@ -209,6 +212,12 @@ int l_easy_perform(lua_State *L) {
     l_easy_setup_readfunction(L, privatep->curl);
   lua_pop(L, 1);
 
+  /* set progress callback function only if entry exist in callback-table */
+  lua_getfield(L, 2, "progressfunction");
+  progressfunction = lua_isfunction(L, -1)?1:0;
+  if(progressfunction)
+     l_easy_setup_progressfunction(L, privatep->curl);
+  lua_pop(L, 1);
 
   /* callback table is on top on stack */
   perform_status = curl_easy_perform(curl);
@@ -220,6 +229,8 @@ int l_easy_perform(lua_State *L) {
     l_easy_clear_writefunction(L, privatep->curl);
   if (readfunction)
     l_easy_clear_readfunction(L, privatep->curl);
+  if (progressfunction)
+     l_easy_clear_progressfunction(L, privatep->curl);
 
   if (perform_status != CURLE_OK)
     return luaL_error(L, "%s", privatep->error);
@@ -255,7 +266,7 @@ int l_getdate(lua_State *L) {
   time_t t = curl_getdate(date, NULL);
   if (t == -1)
     return luaL_error(L, "fails to parse the date string");
-  lua_pushinteger(L, t);
+  lua_pushinteger(L, (lua_Integer)t);
   return 1;
 }
 
