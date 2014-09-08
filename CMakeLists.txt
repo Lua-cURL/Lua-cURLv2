@@ -16,37 +16,37 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 set(SRC
-        src/Lua-cURL.c
-        src/Lua-cURL-share.c
-        src/Lua-cURL-multi.c
-        src/Lua-cURL-callback.c
-        src/Lua-cURL-getinfo.c
-        src/Lua-cURL-post.c
-        src/Lua-cURL-setopt.c
-        src/Lua-utility.c
+        src/lcutils.c
+        src/lcurl.c
+        src/lcshare.c
+        src/lcmulti.c
+        src/lchttppost.c
+        src/lcerror.c
+        src/lceasy.c
+        src/l52util.c
 )
 
 
 if(USE_LUAJIT)
-	find_package(LuaJIT REQUIRED)
-	set(USE_LUA52 OFF)
-	set(USE_LUA OFF)
+    find_package(LuaJIT REQUIRED)
+    set(USE_LUA52 OFF)
+    set(USE_LUA OFF)
 elseif(USE_LUA52)
-	find_package(Lua52 REQUIRED)
-	set(USE_LUA OFF)
-	set(USE_LUAJIT OFF)
+    find_package(Lua52 REQUIRED)
+    set(USE_LUA OFF)
+    set(USE_LUAJIT OFF)
 elseif(USE_LUA)
-	find_package(Lua51 REQUIRED)
-	set(USE_LUA52 OFF)
-	set(USE_LUAJIT OFF)
+    find_package(Lua51 REQUIRED)
+    set(USE_LUA52 OFF)
+    set(USE_LUAJIT OFF)
 endif()
 
 
 find_package(CURL REQUIRED)
 
 include_directories(
-	${LUA_INCLUDE_DIR}
-	${CURL_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIR}
+    ${CURL_INCLUDE_DIRS}
 )
 
 set(_MODULE_LINK "${CURL_LIBRARY}")
@@ -67,7 +67,7 @@ else()
     if (USE_LUA52)
         set(_lua_module_dir "${_lua_lib_dir}/lua/5.2")
     else ()
-	set(_lua_module_dir "${_lua_lib_dir}/lua/5.1")
+        set(_lua_module_dir "${_lua_lib_dir}/lua/5.1")
     endif ()
 endif()
 

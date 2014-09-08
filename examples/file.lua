@@ -1,18 +1,18 @@
-local cURL = require("cURL")
+local cURL = require("lcurl")
 
 -- open output file
-f = io.open("example_homepage", "w")
+f = assert(io.open("example_homepage.html", "w"))
 
-c = cURL.easy_init()
--- setup url
-c:setopt_url("http://www.example.com/")
--- perform, invokes callbacks
-c:perform({writefunction = function(str) 
-				f:write(str)
-			     end})
+cURL.easy()
+  -- setup url
+  :setopt_url("http://www.example.com/")
+  -- setup file object as writer
+  :setopt_writefunction(f)
+  -- perform, invokes callbacks
+  :perform()
+-- close easy
+:close()
 
 -- close output file
 f:close()
 print("Done")
-
-

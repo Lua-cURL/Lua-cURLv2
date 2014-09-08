@@ -4,19 +4,10 @@
 -- RCS ID: $Id: browser.lua,v 0.1 2011/03/11 23:55:20 kai Exp $
 -----------------------------------------------------------------------------
 
-if cURL == nil then
-	local cURL = require("cURL")
-end
-if table == nil then
-	local table = require("table")
-end
-if string == nil then
-	local string = require("string")
-end
-
+local cURL   = require("lcurl.cURL")
 local string = require("string")
-local base = _G
-local table = require("table")
+local table  = require("table")
+local base   = _G
 
 USERAGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)" --windows xp internet explorer 6.0
 
@@ -145,16 +136,16 @@ end
 --function helper for result
 --taken from luasocket page (MIT-License)
 local function build_w_cb(t)
-	return function(s,len)
+	return function(s)
 		table.insert(t, s)
-	return len,nil
+	return #s,nil
 	end
 end
 
 --function helper for headers
 --taken from luasocket page (MIT-License)
 local function h_build_w_cb(t)
-	return function(s,len)
+	return function(s)
 		--stores the received data in the table t
 		--prepare header data
 		name, value = s:match("(.-): (.+)")
@@ -167,7 +158,7 @@ local function h_build_w_cb(t)
 				t.codemessage = codemessage:gsub("[\n\r]", "")
 			end
 		end
-	return len,nil
+	return #s,nil
 	end
 end
 

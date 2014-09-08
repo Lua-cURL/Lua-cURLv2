@@ -1,8 +1,8 @@
 -- use LuaExpat and Lua-CuRL together for On-The-Fly XML parsing
 local lxp = require("lxp")
-local cURL = require("cURL")
+local cURL = require("lcurl.cURL")
 
-tags = {}			
+tags  = {}
 items = {}
 
 callback = {}
@@ -22,7 +22,7 @@ function callback.CharacterData(parser, str)
 end
 function callback.EndElement(parser, tagname)
    --assuming well formed xml
-   tags[#tags] = nil		
+   tags[#tags] = nil
 end
 
 p = lxp.new(callback)
@@ -42,12 +42,12 @@ for data,type in m:perform() do
 end
 
 --finish document
-assert(p:parse())		
+assert(p:parse())
 p:close()
 
 for i, item in ipairs(items) do 
    for k, v in pairs(item) do 
       print(k,v)
    end
-   print()		
+   print()
 end
