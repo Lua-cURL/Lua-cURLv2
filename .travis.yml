@@ -1,0 +1,40 @@
+language: c
+
+env:
+  global:
+    - LUAROCKS=2.2.0
+  matrix:
+    - LUA=lua5.1
+    - LUA=lua5.2
+    - LUA=luajit
+
+branches:
+  only:
+    - master
+
+before_install:
+  - sudo apt-get update
+  - bash .travis/setup_lua.sh
+  - sudo luarocks install lunitx
+  - sudo pip install cpp-coveralls
+  - sudo luarocks install dkjson
+  - sudo luarocks install luafilesystem
+  - sudo luarocks install lua-path
+
+install:
+  - sudo luarocks make rockspecs/lcurl-scm-0.rockspec CFLAGS="-O2 -fPIC -ftest-coverage -fprofile-arcs" LIBFLAG="-shared --coverage"
+
+script: 
+  - cd test
+  - lunit.sh test_easy.lua
+  - lunit.sh test_safe.lua
+  - lunit.sh test_form.lua
+  - lunit.sh test_pause02.c.lua
+
+after_success:
+  - coveralls -b .. -r ..
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
