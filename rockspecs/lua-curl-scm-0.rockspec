@@ -1,15 +1,15 @@
-package = "lcurl"
+package = "lua-curl"
 version = "scm-0"
 source = {
-  url = "https://github.com/moteus/lua-lcurl/archive/master.zip",
-  dir = "lua-lcurl-master",
+  url = "https://github.com/Lua-cURL/Lua-cURL/archive/master.zip",
+  dir = "Lua-cURL-master",
 }
 
 description = {
   summary = "Lua binding to libcurl",
   detailed = [[
   ]],
-  homepage = "https://github.com/moteus/lua-lcurl",
+  homepage = "http://lua-curl.github.io/Lua-cURL",
   license = "MIT/X11"
 }
 
@@ -66,6 +66,6 @@ build = {
       incdirs   = { "$(CURL_INCDIR)" },
       libdirs   = { "$(CURL_LIBDIR)" }
     },
-    ["lcurl.cURL"] = "src/lua/cURL.lua",
+    ["cURL"] = "src/lua/cURL.lua",
   }
 }
