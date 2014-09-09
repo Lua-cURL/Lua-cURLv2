@@ -1,3 +1,6 @@
-For installation instructions — see http://lua-curl.github.io/Lua-cURL
+For installation instructions — see http://lua-curl.github.io/Lua-cURLv2
 
-WARNING: 'multi' mode is incompatible with curl built with threads support.
+!! WARNING:
+!! This is old, almost unmaintained version of Lua cURL wrapper library. Last release is 0.2.4
+!! Please, take a look on https://github.com/Lua-cURL/Lua-cURLv3 (which is newer implementation
+!! from scratch and has a compatibity layer for "old" bahaviour).
